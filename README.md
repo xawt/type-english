@@ -60,7 +60,7 @@ Punkty za pytanie zależą od liczby złych prób przed poprawną odpowiedzią:
 | 2 | 25% `points` | 0.25 |
 | 3 i więcej | 0 | 0 |
 
-- Podpowiedź ogranicza wynik pytania do najwyżej 50% `points`.
+- Każda podpowiedź odkrywa 3 kolejne znaki odpowiedzi (łącznie najwyżej 2/3 jej długości) i obniża wynik pytania o połowę (1 podpowiedź → 50%, 2 → 25% itd.).
 - „Pokaż odpowiedź” daje 0 pkt.
 - Przy włączonym timerze odpowiedź po upływie 20 s daje połowę tego, co wynika z powyższych zasad (np. 1 zła próba + koniec czasu = 25% `points`).
 - Maksymalny wynik rundy to suma `points` wylosowanych pytań.

@@ -161,8 +161,10 @@ const store = {
 const SCALE = [1, 0.5, 0.25];
 // timer: sekundy na pytanie; na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery
 const T_LIMIT = 20, T_MULT = 0.5;
+// podpowiedź: każda odkrywa HINT_STEP znaków (łącznie maks. HINT_MAX odpowiedzi) i mnoży punkty przez HINT_MULT
+const HINT_STEP = 3, HINT_MAX = 2/3, HINT_MULT = 0.5;
 let deadline = 0, tick = 0, timedOut = false, waitStart = false;
-let data, round, i, tries, points, hintLen, grp, started, setLabel = "";
+let data, round, i, tries, points, hintLen, hints, grp, started, setLabel = "";
 const history = [];
 
 const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
@@ -203,7 +205,7 @@ function newRound(){
 }
 
 function show(){
-  const r = round[i]; tries = 0; hintLen = 0;
+  const r = round[i]; tries = 0; hintLen = 0; hints = 0;
   group();
   $("q").innerHTML = esc(r.pl.replace(/[.?!]$/,"")) + '<span class="red">' + (r.pl.match(/[.?!]$/)?.[0] || ".") + '</span>';
   $("sub").innerHTML = r.bonus ? `<b>pytanie bonusowe · ${r.points} pkt</b> · przetłumacz zdanie` : `przetłumacz na angielski · ${r.points} pkt`;
@@ -246,7 +248,7 @@ function check(e){
   const ok = accepted(r);
   if(ok.includes(typed)){
     stopTimer();
-    const mult = Math.min(SCALE[tries-1] ?? 0, hintLen ? 0.5 : 1) * (timedOut ? T_MULT : 1);
+    const mult = (SCALE[tries-1] ?? 0) * HINT_MULT**hints * (timedOut ? T_MULT : 1);
     const pts = Math.round(r.points * mult * 1000)/1000;
     points = Math.round((points+pts)*1000)/1000; r.state = mult===1 ? "ok" : mult>0 ? "meh" : "zero";
     line(`<span class="p">$</span> ${esc(typed)}`);
@@ -306,8 +308,10 @@ $("timerOn").onchange = () => {
   $("answer").focus();
 };
 $("hint").onclick = () => {
-  const a = accepted(round[i])[0]; hintLen = Math.min(hintLen+1, a.length);
-  line(`podpowiedź: ${esc(a.slice(0,hintLen))}${"_".repeat(a.length-hintLen)}`, "info");
+  const a = accepted(round[i])[0], max = Math.floor(a.length * HINT_MAX);
+  if(hintLen >= max){ line("więcej podpowiedzi nie będzie", "dim"); $("answer").focus(); return; }
+  hintLen = Math.min(hintLen + HINT_STEP, max); hints++;
+  line(`podpowiedź: ${esc(a.slice(0,hintLen))}${"_".repeat(a.length-hintLen)} (punkty ×${HINT_MULT**hints})`, "info");
   $("answer").focus();
 };
 $("skip").onclick = () => {
