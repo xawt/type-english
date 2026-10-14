@@ -1,6 +1,6 @@
 {
   "group1": {
-    "count": 10,
+    "count": 15,
     "points": 1,
     "questions": [
       {"pl": "bateria, akumulator", "en": "battery"},
@@ -53,8 +53,8 @@
     ]
   },
   "group2": {
-    "count": 1,
-    "points": 2,
+    "count": 5,
+    "points": 1,
     "questions": [
       {"pl": "bateria działa przez 48 godzin", "en": "(the) battery runs for 48 hours"},
       {"pl": "bateria się rozładowała", "en": "(the) battery is dead"},
