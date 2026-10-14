@@ -35,8 +35,8 @@ h1 .red{color:var(--coral)}
 .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .bar .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .bar .tag{margin-left:auto;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:11px;white-space:nowrap}
-.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:3px;min-height:150px}
-.log{display:flex;flex-direction:column;gap:3px;max-height:40vh;overflow-y:auto}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:3px;height:clamp(240px,45vh,440px)}
+.log{flex:1;min-height:0;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
 .ln{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
 .p{color:var(--green)}
 .err{color:var(--coral)}
@@ -44,7 +44,7 @@ h1 .red{color:var(--coral)}
 .info{color:var(--blue)}
 .dim{color:var(--dim)}
 .bad{color:var(--coral);text-decoration:underline 3px;text-underline-offset:4px;background:color-mix(in srgb,var(--coral) 18%,transparent)}
-form{display:flex;align-items:center;gap:8px;margin-top:4px}
+form{display:flex;align-items:center;gap:8px;margin-top:4px;flex:none}
 #answer{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--fg);font:inherit;font-size:18px;caret-color:var(--green);padding:4px 0}
 #answer::selection{background:var(--coral);color:var(--bg)}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
