@@ -12,6 +12,7 @@ Quiz tłumaczenia PL → EN, styl terminala. Cała apka to jeden plik `index.htm
 
 ## Logika
 - Runda: `count` pytań z każdej grupy, każde warte `points` grupy (domyślnie `DEFAULTS`: 10 × 1 + 1 × 2). Mnożnik wg złych prób w `SCALE` (1 / 0.5 / 0.25 / 0 od 3 złych), podpowiedź = maks. 0.5, „pokaż odpowiedź” = 0. Maks. = suma `points` wylosowanych pytań.
+- Timer: `T_LIMIT = 10` s na pytanie, po czasie mnożnik `T_MULT = 0.5` (mnożony z `SCALE`). Pierwsze pytanie rundy czeka na pierwszą literę (`waitStart`), kolejne liczą od `show()`. Przełącznik `#timerOn`, stan w localStorage `timer` (domyślnie włączony).
 - Odpowiedzi normalizowane w `norm()` (małe litery, apostrofy, końcowa interpunkcja, spacje).
 - Kolejność źródeł pytań: `?set=nazwa` (`nazwa.json`) > zestaw w localStorage (`q`, nazwa w `qname`) > `questions.json` > `SAMPLE`.
 - Log terminala: każde pytanie ma swoją grupę `.qgrp`; po zaliczeniu dostaje `.done` (przygaszenie).
