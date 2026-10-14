@@ -63,6 +63,12 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
 .qgrp{display:flex;flex-direction:column;gap:3px}
 .qgrp.done{opacity:.38}
 .qgrp.done .bad{background:none}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px;font-variant-numeric:tabular-nums}
+.hist li{display:flex;flex-wrap:wrap;gap:4px 14px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.hist li:last-child{border-bottom:0}
+.hist .when{color:var(--dim)}
+.hist .pts{color:var(--green);font-weight:700}
+.hist .set{color:var(--dim);margin-left:auto;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:no-preference){.qgrp{transition:opacity .4s}}
 @media (prefers-reduced-motion:no-preference){.shake{animation:sh .25s}}
 @keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
@@ -95,6 +101,11 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
     <button type="button" id="skip">pokaż odpowiedź</button>
     <button type="button" id="restart">nowe losowanie</button>
   </div>
+
+  <details id="histbox" open>
+    <summary>historia (od otwarcia strony)</summary>
+    <ul class="hist" id="hist"></ul>
+  </details>
 
   <details id="cfg">
     <summary>zestaw pytań (JSON)</summary>
@@ -131,7 +142,8 @@ const store = {
   set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} }
 };
 
-let data, round, i, tries, points, hintLen, grp, setLabel = "";
+let data, round, i, tries, points, hintLen, grp, started, setLabel = "";
+const history = [];
 
 const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
 const accepted = item => (Array.isArray(item.en) ? item.en : [item.en]).map(norm);
@@ -151,7 +163,7 @@ function newRound(){
     ...shuffle(data.group2).slice(0,N2).map(x=>({...x,bonus:true}))
   ];
   round.forEach(r=>r.state="");
-  i = 0; points = 0; grp = null; $("log").innerHTML = "";
+  i = 0; points = 0; grp = null; started = Date.now(); $("log").innerHTML = "";
   $("form").hidden = false; $("actions").hidden = false;
   show();
 }
@@ -208,6 +220,7 @@ function next(){
     $("q").innerHTML = `Koniec<span class="red">!</span>`;
     $("sub").textContent = "";
     $("form").hidden = true; $("actions").hidden = true;
+    history.unshift({end: new Date(), ms: Date.now()-started, points, max, set: setLabel}); renderHistory();
     group(); line(""); line(`wynik: ${points} / ${max} pkt`, "info");
     if(wrong.length){ line("do powtórki:", "dim"); wrong.forEach(r=>line(`  ${esc(r.pl)} → ${esc(accepted(r)[0])}`, "dim")); }
     else line("wszystko za pierwszym razem 🎉", "ok");
@@ -215,6 +228,18 @@ function next(){
     b.onclick = newRound; $("log").append(b); b.focus();
   }, 700);
 }
+
+const pad = n => String(n).padStart(2,"0");
+function renderHistory(){
+  $("hist").innerHTML = history.length ? history.map(h => {
+    const s = Math.round(h.ms/1000);
+    return `<li><span class="when">${pad(h.end.getHours())}:${pad(h.end.getMinutes())}</span>`
+      + `<span>⏱ ${Math.floor(s/60)}:${pad(s%60)}</span>`
+      + `<span class="pts">${h.points} / ${h.max} pkt</span>`
+      + `<span class="set">${esc(h.set)}</span></li>`;
+  }).join("") : `<li class="dim">brak ukończonych rund</li>`;
+}
+renderHistory();
 
 $("form").addEventListener("submit", check);
 $("hint").onclick = () => {
