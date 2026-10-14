@@ -23,6 +23,7 @@ Quiz tłumaczenia PL → EN, styl terminala. Cała apka to jeden plik `index.htm
 - UI i komentarze po polsku, małymi literami w stylu terminala.
 - Kolory jako tokeny w `:root`; czcionka JetBrains Mono.
 - Mobile-first: 16px boczny margines, bez poziomego scrolla.
+- Okno terminala (`.body`) ma stałą wysokość — nie może zmieniać rozmiaru w trakcie gry; nowe linie przewijają się w `.log`.
 - Wszystkie dostępy do localStorage w try/catch.
 - Commity atomowe (jedna logiczna zmiana na commit), bez linii `Co-Authored-By`.
 - Workflow: gałąź → PR do `main` → merge. Bez commitów bezpośrednio na `main` (merge = deploy na Pages).
