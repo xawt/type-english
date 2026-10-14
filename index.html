@@ -114,7 +114,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
     <button type="button" id="restart">nowe losowanie</button>
   </div>
 
-  <label class="switch"><input type="checkbox" role="switch" id="timerOn" checked> timer · 10 s na pytanie (połowa punktów po czasie)</label>
+  <label class="switch"><input type="checkbox" role="switch" id="timerOn" checked> timer · 20 s na pytanie (połowa punktów po czasie)</label>
 
   <details id="histbox" open>
     <summary>historia (od otwarcia strony)</summary>
@@ -160,7 +160,7 @@ const store = {
 // mnożnik punktów wg liczby złych prób przed poprawną: 0 → 100%, 1 → 50%, 2 → 25%, 3+ → 0
 const SCALE = [1, 0.5, 0.25];
 // timer: sekundy na pytanie; na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery
-const T_LIMIT = 10, T_MULT = 0.5;
+const T_LIMIT = 20, T_MULT = 0.5;
 let deadline = 0, tick = 0, timedOut = false, waitStart = false;
 let data, round, i, tries, points, hintLen, grp, started, setLabel = "";
 const history = [];
