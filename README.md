@@ -8,7 +8,7 @@ Quiz tłumaczenia PL → EN w stylu terminala. Statyczna strona, bez builda.
 - Runda: losowe pytania z `group1` i bonusowe z `group2` — liczbę pytań i punkty ustawiasz w pliku pytań (domyślnie 10 × 1 pkt + 1 × 2 pkt).
 - Zła odpowiedź podświetla pierwszą błędną literę; każda zła próba zmniejsza punkty za pytanie (100% → 50% → 25% → 0).
 - Zaliczone pytania przygasają w logu.
-- Timer (przełącznik, domyślnie włączony): 10 s na pytanie. Na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery, na kolejnych od razu. Po czasie można dalej odpowiadać, ale za 50% punktów. Ustawienie zapamiętywane na tym urządzeniu.
+- Timer (przełącznik, domyślnie włączony): 20 s na pytanie. Na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery, na kolejnych od razu. Po czasie można dalej odpowiadać, ale za 50% punktów. Ustawienie zapamiętywane na tym urządzeniu.
 - Historia wyników od otwarcia strony (godzina, czas rundy, wynik, zestaw).
 - Własny zestaw pytań: wgraj plik JSON lub wklej go w sekcji „zestaw pytań (JSON)” — zapamiętywany na tym urządzeniu.
 
@@ -62,7 +62,7 @@ Punkty za pytanie zależą od liczby złych prób przed poprawną odpowiedzią:
 
 - Podpowiedź ogranicza wynik pytania do najwyżej 50% `points`.
 - „Pokaż odpowiedź” daje 0 pkt.
-- Przy włączonym timerze odpowiedź po upływie 10 s daje połowę tego, co wynika z powyższych zasad (np. 1 zła próba + koniec czasu = 25% `points`).
+- Przy włączonym timerze odpowiedź po upływie 20 s daje połowę tego, co wynika z powyższych zasad (np. 1 zła próba + koniec czasu = 25% `points`).
 - Maksymalny wynik rundy to suma `points` wylosowanych pytań.
 
 ### Sprawdzanie odpowiedzi
