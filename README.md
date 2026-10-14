@@ -5,20 +5,56 @@ Quiz tłumaczenia PL → EN w stylu terminala. Statyczna strona, bez builda.
 **Online:** https://xawt.github.io/type-english/
 
 ## Funkcje
-- Runda: 10 losowych słów z `group1` + 1 zdanie bonusowe z `group2` (2 pkt).
+- Runda: losowe pytania z `group1` i bonusowe z `group2` — liczbę pytań i punkty ustawiasz w pliku pytań (domyślnie 10 × 1 pkt + 1 × 2 pkt).
 - Zła odpowiedź podświetla pierwszą błędną literę; podpowiedź / pokazanie odpowiedzi daje połowę punktów.
 - Zaliczone pytania przygasają w logu.
 - Historia wyników od otwarcia strony (godzina, czas rundy, wynik, zestaw).
 - Własny zestaw pytań: wgraj plik JSON lub wklej go w sekcji „zestaw pytań (JSON)” — zapamiętywany na tym urządzeniu.
 
 ## Format pliku pytań
+Plik JSON z dwiema grupami: `group1` (zwykłe pytania) i `group2` (pytania bonusowe, oznaczone ★).
+Dla każdej grupy ustawiasz, ile pytań losować do rundy i ile punktów daje odpowiedź.
+
 ```json
 {
-  "group1": [ { "pl": "pies", "en": "dog" }, { "pl": "przyjaciel", "en": ["friend", "mate"] } ],
-  "group2": [ { "pl": "Lubię lody.", "en": "i like ice cream" } ]
+  "group1": {
+    "count": 10,
+    "points": 1,
+    "questions": [
+      { "pl": "pies", "en": "dog" },
+      { "pl": "przyjaciel", "en": ["friend", "mate"] }
+    ]
+  },
+  "group2": {
+    "count": 1,
+    "points": 2,
+    "questions": [
+      { "pl": "Mam na imię Ola.", "en": ["my name is ola", "i am ola", "i'm ola"] },
+      { "pl": "Lubię lody.", "en": "i like ice cream" }
+    ]
+  }
 }
 ```
-`en` może być tekstem lub listą akceptowanych odpowiedzi. Wielkość liter i końcowa interpunkcja są ignorowane.
+
+| Pole | Znaczenie | Domyślnie |
+|---|---|---|
+| `count` | ile pytań z grupy losować do jednej rundy (liczba całkowita ≥ 0; gdy pytań jest mniej, bierze wszystkie) | `group1`: 10, `group2`: 1 |
+| `points` | punkty za poprawną odpowiedź za pierwszym razem, bez podpowiedzi (liczba > 0, może być ułamkowa) | `group1`: 1, `group2`: 2 |
+| `questions` | lista pytań, co najmniej 1 | — |
+| `pl` | tekst pytania (po polsku) | — |
+| `en` | poprawna odpowiedź: tekst albo lista akceptowanych wariantów | — |
+
+- `count` i `points` można pominąć — wtedy obowiązują wartości domyślne.
+- Grupa może być też samą listą pytań (starszy format): `"group1": [ { "pl": "pies", "en": "dog" } ]`.
+- `count: 0` wyłącza grupę z rundy, ale łącznie runda musi mieć co najmniej 1 pytanie.
+
+### Punktacja
+- Poprawnie za pierwszym razem, bez podpowiedzi: pełne `points`.
+- Po błędnej próbie, podpowiedzi lub „pokaż odpowiedź”: połowa `points`.
+- Maksymalny wynik rundy to suma `points` wylosowanych pytań.
+
+### Sprawdzanie odpowiedzi
+Wielkość liter, końcowe `. ! ? ,`, nadmiarowe spacje są ignorowane, a apostrofy `’` i `` ` `` traktowane jak `'`.
 
 ## Inne zestawy w repo
 Dodaj `nazwa.json` obok `index.html` i otwórz `…/type-english/?set=nazwa`.
