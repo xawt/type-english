@@ -125,9 +125,13 @@ const SAMPLE = {
 };
 const N1 = 10, N2 = 1;
 const $ = id => document.getElementById(id);
-const store = { get(){ try{return localStorage.getItem("q")}catch(e){return null} }, set(v){ try{localStorage.setItem("q",v)}catch(e){} } };
+const store = {
+  get(){ try{return localStorage.getItem("q")}catch(e){return null} },
+  name(){ try{return localStorage.getItem("qname") || "własny zestaw"}catch(e){return "własny zestaw"} },
+  set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} }
+};
 
-let data, round, i, tries, points, hintLen, grp;
+let data, round, i, tries, points, hintLen, grp, setLabel = "";
 
 const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
 const accepted = item => (Array.isArray(item.en) ? item.en : [item.en]).map(norm);
@@ -225,12 +229,12 @@ $("skip").onclick = () => {
 };
 $("restart").onclick = newRound;
 
-function loadJSON(text, quiet, save=true){
+function loadJSON(text, quiet, save=true, label="własny zestaw"){
   try{
-    data = validate(JSON.parse(text));
+    data = validate(JSON.parse(text)); setLabel = label;
     $("json").value = JSON.stringify(data, null, 2);
-    if(save) store.set($("json").value);
-    if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano: ${data.group1.length} + ${data.group2.length} pytań</span>`;
+    if(save) store.set($("json").value, label);
+    if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano ${esc(label)}: ${data.group1.length} + ${data.group2.length} pytań</span>`;
     newRound(); return true;
   }catch(err){
     $("jmsg").innerHTML = `<span class="err">${esc(typeof err==="string"?err:"Niepoprawny JSON: "+err.message)}</span>`;
@@ -238,15 +242,15 @@ function loadJSON(text, quiet, save=true){
   }
 }
 $("load").onclick = () => loadJSON($("json").value);
-$("file").onchange = e => { const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>loadJSON(fr.result); fr.readAsText(f); };
+$("file").onchange = e => { const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>loadJSON(fr.result, false, true, f.name); fr.readAsText(f); };
 
 // Kolejność: ?set=nazwa (nazwa.json) > zestaw wklejony/wgrany na tym urządzeniu > questions.json > przykład
 const setName = new URLSearchParams(location.search).get("set");
-const fromRepo = f => fetch(f, {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.text(); }).then(t => { if(!loadJSON(t, true, false)) throw 0; });
-const fallback = () => loadJSON(JSON.stringify(SAMPLE), true, false);
+const fromRepo = f => fetch(f, {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.text(); }).then(t => { if(!loadJSON(t, true, false, f)) throw 0; });
+const fallback = () => loadJSON(JSON.stringify(SAMPLE), true, false, "przykład");
 if(setName) fromRepo(encodeURIComponent(setName) + ".json").catch(fallback);
-else { const s = store.get(); if(!(s && loadJSON(s, true))) fromRepo("questions.json").catch(fallback); }
-$("reset").onclick = () => { try{localStorage.removeItem("q")}catch(e){} location.reload(); };
+else { const s = store.get(); if(!(s && loadJSON(s, true, true, store.name()))) fromRepo("questions.json").catch(fallback); }
+$("reset").onclick = () => { try{localStorage.removeItem("q"); localStorage.removeItem("qname")}catch(e){} location.reload(); };
 </script>
 
 </body>
