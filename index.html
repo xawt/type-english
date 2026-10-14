@@ -59,6 +59,17 @@ summary{cursor:pointer;color:var(--dim)}
 details[open] summary{margin-bottom:10px}
 textarea{width:100%;min-height:220px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:5px;font:inherit;font-size:12.5px;padding:10px;resize:vertical}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.bar .tag + .tag{margin-left:0}
+#timer{font-variant-numeric:tabular-nums}
+#timer.low{color:var(--yellow);border-color:var(--yellow)}
+#timer.out{color:var(--coral);border-color:var(--coral)}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;color:var(--dim);font-size:13px;align-self:flex-start}
+.switch input{appearance:none;margin:0;width:38px;height:20px;border-radius:10px;border:1px solid var(--line);background:var(--panel);position:relative;cursor:pointer;flex:none}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--dim)}
+.switch input:checked{background:color-mix(in srgb,var(--green) 25%,transparent);border-color:var(--green)}
+.switch input:checked::after{left:20px;background:var(--green)}
+.switch input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.switch input::after{transition:left .15s}}
 .msg{font-size:12.5px}
 input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
 .qgrp{display:flex;flex-direction:column;gap:3px}
@@ -86,7 +97,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
   <div class="term" id="term">
     <div class="bar">
       <span class="dot" style="background:var(--coral)"></span><span class="dot" style="background:var(--yellow)"></span><span class="dot" style="background:var(--green)"></span>
-      <span class="t">uczen@english: ~</span><span class="tag" id="score">0 pkt</span>
+      <span class="t">uczen@english: ~</span><span class="tag" id="timer" hidden></span><span class="tag" id="score">0 pkt</span>
     </div>
     <div class="body">
       <div class="log" id="log"></div>
@@ -102,6 +113,8 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
     <button type="button" id="skip">pokaż odpowiedź</button>
     <button type="button" id="restart">nowe losowanie</button>
   </div>
+
+  <label class="switch"><input type="checkbox" role="switch" id="timerOn" checked> timer · 10 s na pytanie (połowa punktów po czasie)</label>
 
   <details id="histbox" open>
     <summary>historia (od otwarcia strony)</summary>
@@ -146,6 +159,9 @@ const store = {
 
 // mnożnik punktów wg liczby złych prób przed poprawną: 0 → 100%, 1 → 50%, 2 → 25%, 3+ → 0
 const SCALE = [1, 0.5, 0.25];
+// timer: sekundy na pytanie; na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery
+const T_LIMIT = 10, T_MULT = 0.5;
+let deadline = 0, tick = 0, timedOut = false, waitStart = false;
 let data, round, i, tries, points, hintLen, grp, started, setLabel = "";
 const history = [];
 
@@ -188,7 +204,27 @@ function show(){
   $("q").innerHTML = esc(r.pl.replace(/[.?!]$/,"")) + '<span class="red">' + (r.pl.match(/[.?!]$/)?.[0] || ".") + '</span>';
   $("sub").innerHTML = r.bonus ? `<b>pytanie bonusowe · ${r.points} pkt</b> · przetłumacz zdanie` : `przetłumacz na angielski · ${r.points} pkt`;
   $("answer").value = ""; $("answer").focus();
-  tabs(); score();
+  tabs(); score(); armTimer();
+}
+
+function stopTimer(){ clearInterval(tick); tick = 0; waitStart = false; }
+function armTimer(){
+  stopTimer(); timedOut = false;
+  const el = $("timer"); el.hidden = !$("timerOn").checked; el.className = "tag";
+  if(el.hidden) return;
+  if(i === 0){ waitStart = true; el.textContent = `⏱ ${T_LIMIT}s`; el.title = "odliczanie rusza od pierwszej wpisanej litery"; }
+  else startTimer();
+}
+function startTimer(){
+  waitStart = false; $("timer").title = ""; deadline = Date.now() + T_LIMIT*1000;
+  tick = setInterval(drawTimer, 100); drawTimer();
+}
+function drawTimer(){
+  const left = Math.max(0, Math.ceil((deadline - Date.now())/1000)), el = $("timer");
+  el.textContent = `⏱ ${left}s`; el.classList.toggle("low", left <= 3 && left > 0);
+  if(left > 0) return;
+  stopTimer(); timedOut = true; el.textContent = "⏱ 0s"; el.classList.add("out");
+  line(`⌛ czas minął — za to pytanie ${T_MULT*100}% punktów`, "err");
 }
 
 function tabs(){
@@ -205,7 +241,8 @@ function check(e){
   tries++;
   const ok = accepted(r);
   if(ok.includes(typed)){
-    const mult = Math.min(SCALE[tries-1] ?? 0, hintLen ? 0.5 : 1);
+    stopTimer();
+    const mult = Math.min(SCALE[tries-1] ?? 0, hintLen ? 0.5 : 1) * (timedOut ? T_MULT : 1);
     const pts = Math.round(r.points * mult * 1000)/1000;
     points = Math.round((points+pts)*1000)/1000; r.state = mult===1 ? "ok" : mult>0 ? "meh" : "zero";
     line(`<span class="p">$</span> ${esc(typed)}`);
@@ -230,7 +267,7 @@ function next(){
   i++;
   if(i < round.length){ setTimeout(show, 700); return; }
   setTimeout(()=>{
-    tabs(); score();
+    tabs(); score(); stopTimer(); $("timer").hidden = true;
     const max = round.reduce((sum,r)=>sum+r.points, 0), wrong = round.filter(r=>r.state!=="ok");
     $("q").innerHTML = `Koniec<span class="red">!</span>`;
     $("sub").textContent = "";
@@ -257,6 +294,13 @@ function renderHistory(){
 renderHistory();
 
 $("form").addEventListener("submit", check);
+$("answer").addEventListener("input", () => { if(waitStart && $("answer").value) startTimer(); });
+try{ $("timerOn").checked = localStorage.getItem("timer") !== "0" }catch(e){}
+$("timerOn").onchange = () => {
+  try{ localStorage.setItem("timer", $("timerOn").checked ? "1" : "0") }catch(e){}
+  if(!$("form").hidden && round) armTimer(); else $("timer").hidden = true;
+  $("answer").focus();
+};
 $("hint").onclick = () => {
   const a = accepted(round[i])[0]; hintLen = Math.min(hintLen+1, a.length);
   line(`podpowiedź: ${esc(a.slice(0,hintLen))}${"_".repeat(a.length-hintLen)}`, "info");
