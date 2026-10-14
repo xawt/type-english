@@ -3,91 +3,104 @@
     "count": 10,
     "points": 1,
     "questions": [
-      {
-        "pl": "pies",
-        "en": "dog"
-      },
-      {
-        "pl": "kot",
-        "en": "cat"
-      },
-      {
-        "pl": "dom",
-        "en": "house"
-      },
-      {
-        "pl": "jabłko",
-        "en": "apple"
-      },
-      {
-        "pl": "szkoła",
-        "en": "school"
-      },
-      {
-        "pl": "czerwony",
-        "en": "red"
-      },
-      {
-        "pl": "książka",
-        "en": "book"
-      },
-      {
-        "pl": "woda",
-        "en": "water"
-      },
-      {
-        "pl": "przyjaciel",
-        "en": [
-          "friend",
-          "mate"
-        ]
-      },
-      {
-        "pl": "okno",
-        "en": "window"
-      },
-      {
-        "pl": "zielony",
-        "en": "green"
-      },
-      {
-        "pl": "mleko",
-        "en": "milk"
-      },
-      {
-        "pl": "samochód",
-        "en": "car"
-      },
-      {
-        "pl": "ptak",
-        "en": "bird"
-      },
-      {
-        "pl": "słońce",
-        "en": "sun"
-      }
+      {"pl": "bateria, akumulator", "en": "battery"},
+      {"pl": "czas pracy baterii", "en": "battery life"},
+      {"pl": "nie działać, być zepsutym", "en": "(be) out of order"},
+      {"pl": "popsuć się", "en": "break down"},
+      {"pl": "zepsuta (maszyna)", "en": ["(a) broken-down (machine)", "(a) broken down (machine)"]},
+      {"pl": "przycisk", "en": "button"},
+      {"pl": "(cyfrowy) aparat fotograficzny / kamera", "en": "(digital) camera"},
+      {"pl": "ładowarka", "en": "charger"},
+      {"pl": "połączyć", "en": "connect"},
+      {"pl": "urządzenie", "en": "device"},
+      {"pl": "cyfra", "en": "digit"},
+      {"pl": "przytwierdzić, umocować", "en": "fix"},
+      {"pl": "słuchawki", "en": "headphones"},
+      {"pl": "instrukcja obsługi", "en": "manual"},
+      {"pl": "włączony", "en": "on"},
+      {"pl": "wyłączony", "en": "off"},
+      {"pl": "włącznik/wyłącznik", "en": ["on-off switch", "on/off switch", "on off switch"]},
+      {"pl": "kserokopiarka", "en": "photocopier"},
+      {"pl": "wtyczka", "en": "plug"},
+      {"pl": "podłączyć do prądu", "en": "plug in"},
+      {"pl": "odłączyć od prądu", "en": "unplug"},
+      {"pl": "nacisnąć guzik, przycisk", "en": ["press (a) button", "push (a) button", "press the button", "push the button"]},
+      {"pl": "drukarka", "en": "printer"},
+      {"pl": "pilot (np. do telewizora)", "en": "remote (control)"},
+      {"pl": "gniazdko", "en": "socket"},
+      {"pl": "maszyna parowa", "en": "steam engine"},
+      {"pl": "włączyć", "en": ["switch on", "turn on"]},
+      {"pl": "wyłączyć", "en": ["switch off", "turn off"]},
+      {"pl": "technika", "en": "technology"},
+      {"pl": "koło", "en": "wheel"},
+      {"pl": "@ (w adresie e-mail)", "en": "at"},
+      {"pl": "przyłączać, dołączać", "en": "attach"},
+      {"pl": "załącznik", "en": "attachment"},
+      {"pl": "nie działać, zepsuć się, zerwać się", "en": "(be) down"},
+      {"pl": "przeglądać, przeszukiwać internet", "en": ["browse the net", "browse the internet"]},
+      {"pl": "kliknąć", "en": "click"},
+      {"pl": "kliknąć dwukrotnie", "en": ["double click", "double-click"]},
+      {"pl": "zawiesić się (o komputerze)", "en": "crash"},
+      {"pl": "stworzyć nowy katalog", "en": "create (a) new folder"},
+      {"pl": "baza danych", "en": "database"},
+      {"pl": "skasować", "en": "delete"},
+      {"pl": "pulpit, komputer stacjonarny", "en": "desktop (computer)"},
+      {"pl": "kropka (np. w adresie e-mail)", "en": "dot"},
+      {"pl": "pobierać z sieci, ściągać (gry)", "en": "download (games)"},
+      {"pl": "konto e-mail", "en": ["email account", "e-mail account"]},
+      {"pl": "błąd", "en": "error"},
+      {"pl": "plik", "en": "file"}
     ]
   },
   "group2": {
     "count": 1,
     "points": 2,
     "questions": [
-      {
-        "pl": "Mam na imię Ola.",
-        "en": [
-          "my name is ola",
-          "i am ola",
-          "i'm ola"
-        ]
-      },
-      {
-        "pl": "Lubię lody.",
-        "en": "i like ice cream"
-      },
-      {
-        "pl": "Gdzie jest mój plecak?",
-        "en": "where is my backpack"
-      }
+      {"pl": "bateria działa przez 48 godzin", "en": "(the) battery runs for 48 hours"},
+      {"pl": "bateria się rozładowała", "en": "(the) battery is dead"},
+      {"pl": "ładować telefon", "en": ["charge (your) phone", "charge the phone"]},
+      {"pl": "wprowadzić (numer PIN)", "en": ["enter (your PIN number)", "enter (your) PIN"]},
+      {"pl": "być w zasięgu", "en": "get a signal"},
+      {"pl": "rozłączyć się", "en": ["hang up (on sb)", "hang up on somebody", "hang up on someone"]},
+      {"pl": "klawiatura", "en": "keypad"},
+      {"pl": "niski poziom (naładowania) baterii", "en": "low battery"},
+      {"pl": "zadzwonić", "en": "make a (phone) call"},
+      {"pl": "ekran (dotykowy)", "en": ["(touch) screen", "touchscreen"]},
+      {"pl": "wysłać SMS", "en": ["send a text (message)", "send an sms"]},
+      {"pl": "skonfigurować telefon", "en": ["set up a phone", "set up (the) phone", "set up your phone"]},
+      {"pl": "pisać do kogoś SMS", "en": ["text (sb)", "text somebody", "text someone"]},
+      {"pl": "nie ma zasięgu (w telefonie komórkowym)", "en": ["there's no signal", "there's no coverage", "there is no signal", "there is no coverage"]},
+      {"pl": "doładować telefon", "en": ["top up (your phone)", "top up the phone"]},
+      {"pl": "łączyć się z siecią", "en": "go online"},
+      {"pl": "twardy dysk", "en": ["hard disk", "hard drive"]},
+      {"pl": "zainstalować (program)", "en": ["install (a program)", "install (the program)"]},
+      {"pl": "hasło", "en": "password"},
+      {"pl": "pamięć USB", "en": ["pen drive", "pendrive", "usb drive", "usb stick", "flash drive"]},
+      {"pl": "przenośny (np. sprzęt)", "en": "portable"},
+      {"pl": "wpis (na forum, blogu); zamieścić wpis", "en": "post"},
+      {"pl": "prywatność", "en": "privacy"},
+      {"pl": "chronić", "en": "protect"},
+      {"pl": "wznawiać, ponownie uruchamiać", "en": "restart"},
+      {"pl": "zapisać (dokument)", "en": ["save (a document)", "save (the document)"]},
+      {"pl": "wyszukiwarka internetowa", "en": "search engine"},
+      {"pl": "bezpieczeństwo", "en": "security"},
+      {"pl": "wybrać", "en": "select"},
+      {"pl": "ustawienia", "en": "settings"},
+      {"pl": "zamykać, wyłączać (komputer, system)", "en": "shut down"},
+      {"pl": "serwisy społecznościowe", "en": "social media"},
+      {"pl": "oprogramowanie", "en": "software"},
+      {"pl": "włączyć, uruchomić (komputer)", "en": ["start up (a computer)", "start up (the computer)"]},
+      {"pl": "przenosić/wysyłać dane", "en": "transfer data"},
+      {"pl": "pisać (na komputerze)", "en": "type"},
+      {"pl": "odplątać", "en": "untangle"},
+      {"pl": "uaktualnić", "en": "update"},
+      {"pl": "załadować, wysyłać (np. pliki na serwer)", "en": "upload"},
+      {"pl": "użytkownik", "en": "user"},
+      {"pl": "przeglądarka internetowa", "en": "(web) browser"},
+      {"pl": "kamera internetowa", "en": ["webcam", "web camera"]},
+      {"pl": "strona internetowa", "en": ["website", "web site"]},
+      {"pl": "przewód, kabel", "en": ["wire", "cable"]},
+      {"pl": "bezprzewodowy", "en": "wireless"}
     ]
   }
 }
