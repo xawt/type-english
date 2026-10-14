@@ -134,7 +134,8 @@ const SAMPLE = {
     {pl:"Gdzie jest mój plecak?", en:"where is my backpack"}
   ]
 };
-const N1 = 10, N2 = 1;
+// domyślnie: ile pytań losować z grupy i ile punktów za odpowiedź (gdy grupa jest samą tablicą)
+const DEFAULTS = { group1: {count:10, points:1}, group2: {count:1, points:2} };
 const $ = id => document.getElementById(id);
 const store = {
   get(){ try{return localStorage.getItem("q")}catch(e){return null} },
@@ -150,17 +151,27 @@ const accepted = item => (Array.isArray(item.en) ? item.en : [item.en]).map(norm
 const shuffle = a => { a=[...a]; for(let k=a.length-1;k>0;k--){const j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]]} return a };
 const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 
+// grupa: tablica pytań albo { count, points, questions: [...] }
 function validate(d){
-  if(!d || !Array.isArray(d.group1) || !Array.isArray(d.group2)) throw "Brak tablic group1 i group2.";
-  for(const it of [...d.group1,...d.group2]) if(!it.pl || !it.en) throw "Każde pytanie musi mieć pola pl i en.";
-  if(d.group1.length < 1 || d.group2.length < 1) throw "Obie grupy muszą mieć co najmniej 1 pytanie.";
-  return d;
+  if(!d || !d.group1 || !d.group2) throw "Brak grup group1 i group2.";
+  const out = {};
+  for(const name of ["group1","group2"]){
+    const g = Array.isArray(d[name]) ? {questions: d[name]} : d[name];
+    const {count = DEFAULTS[name].count, points = DEFAULTS[name].points, questions} = g;
+    if(!Array.isArray(questions) || questions.length < 1) throw `${name}: potrzebna lista pytań (co najmniej 1).`;
+    for(const it of questions) if(!it.pl || !it.en) throw "Każde pytanie musi mieć pola pl i en.";
+    if(!Number.isInteger(count) || count < 0) throw `${name}: count musi być liczbą całkowitą ≥ 0.`;
+    if(typeof points !== "number" || !(points > 0)) throw `${name}: points musi być liczbą > 0.`;
+    out[name] = {count, points, questions};
+  }
+  if(out.group1.count + out.group2.count < 1) throw "Runda musi mieć co najmniej 1 pytanie.";
+  return out;
 }
 
 function newRound(){
   round = [
-    ...shuffle(data.group1).slice(0,N1).map(x=>({...x,bonus:false})),
-    ...shuffle(data.group2).slice(0,N2).map(x=>({...x,bonus:true}))
+    ...shuffle(data.group1.questions).slice(0,data.group1.count).map(x=>({...x,bonus:false,points:data.group1.points})),
+    ...shuffle(data.group2.questions).slice(0,data.group2.count).map(x=>({...x,bonus:true,points:data.group2.points}))
   ];
   round.forEach(r=>r.state="");
   i = 0; points = 0; grp = null; started = Date.now(); $("log").innerHTML = "";
@@ -172,7 +183,7 @@ function show(){
   const r = round[i]; tries = 0; hintLen = 0;
   group();
   $("q").innerHTML = esc(r.pl.replace(/[.?!]$/,"")) + '<span class="red">' + (r.pl.match(/[.?!]$/)?.[0] || ".") + '</span>';
-  $("sub").innerHTML = r.bonus ? "<b>pytanie bonusowe · 2 pkt</b> · przetłumacz zdanie" : "przetłumacz na angielski";
+  $("sub").innerHTML = r.bonus ? `<b>pytanie bonusowe · ${r.points} pkt</b> · przetłumacz zdanie` : `przetłumacz na angielski · ${r.points} pkt`;
   $("answer").value = ""; $("answer").focus();
   tabs(); score();
 }
@@ -191,8 +202,8 @@ function check(e){
   tries++;
   const ok = accepted(r);
   if(ok.includes(typed)){
-    const pts = (r.bonus?2:1) * (tries===1 && !hintLen ? 1 : 0.5);
-    points += pts; r.state = tries===1 && !hintLen ? "ok" : "meh";
+    const pts = r.points * (tries===1 && !hintLen ? 1 : 0.5);
+    points = Math.round((points+pts)*100)/100; r.state = tries===1 && !hintLen ? "ok" : "meh";
     line(`<span class="p">$</span> ${esc(typed)}`);
     line(`✓ dobrze! +${pts} pkt`, "ok");
     grp.classList.add("done");
@@ -216,7 +227,7 @@ function next(){
   if(i < round.length){ setTimeout(show, 700); return; }
   setTimeout(()=>{
     tabs(); score();
-    const max = N1 + 2*N2, wrong = round.filter(r=>r.state!=="ok");
+    const max = round.reduce((sum,r)=>sum+r.points, 0), wrong = round.filter(r=>r.state!=="ok");
     $("q").innerHTML = `Koniec<span class="red">!</span>`;
     $("sub").textContent = "";
     $("form").hidden = true; $("actions").hidden = true;
@@ -259,7 +270,7 @@ function loadJSON(text, quiet, save=true, label="własny zestaw"){
     data = validate(JSON.parse(text)); setLabel = label;
     $("json").value = JSON.stringify(data, null, 2);
     if(save) store.set($("json").value, label);
-    if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano ${esc(label)}: ${data.group1.length} + ${data.group2.length} pytań</span>`;
+    if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano ${esc(label)}: losowane ${Math.min(data.group1.count,data.group1.questions.length)} z ${data.group1.questions.length} + ${Math.min(data.group2.count,data.group2.questions.length)} z ${data.group2.questions.length} pytań</span>`;
     newRound(); return true;
   }catch(err){
     $("jmsg").innerHTML = `<span class="err">${esc(typeof err==="string"?err:"Niepoprawny JSON: "+err.message)}</span>`;
