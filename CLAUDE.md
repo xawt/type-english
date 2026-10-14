@@ -23,6 +23,7 @@ Quiz tłumaczenia PL → EN, styl terminala. Cała apka to jeden plik `index.htm
 - Mobile-first: 16px boczny margines, bez poziomego scrolla.
 - Wszystkie dostępy do localStorage w try/catch.
 - Commity atomowe (jedna logiczna zmiana na commit), bez linii `Co-Authored-By`.
+- Workflow: gałąź → PR do `main` → merge. Bez commitów bezpośrednio na `main` (merge = deploy na Pages).
 
 ## Uruchomienie
 `python3 -m http.server` w katalogu, potem http://localhost:8000.
