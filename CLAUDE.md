@@ -30,3 +30,11 @@ Quiz tłumaczenia PL → EN, styl terminala. Cała apka to jeden plik `index.htm
 
 ## Uruchomienie
 `python3 -m http.server` w katalogu, potem http://localhost:8000.
+
+## Testy
+Każdą zmianę funkcjonalności sprawdzaj w headless Chromium (z Playwrighta: `~/.cache/ms-playwright/chromium-*/chrome-linux*/chrome`), nie tylko `node --check`.
+- Skopiuj `index.html` do katalogu tymczasowego, dopisz przed `</body>` `<script src="t.js"></script>` ze scenariuszem testu.
+- Globalne `let`/funkcje z `index.html` są widoczne w `t.js`: ustaw `round`/`i`, wywołaj `show()`, `hint()`, `check({preventDefault(){}})`, `$("skip").click()` itd. Odczekaj start (`setTimeout` ~500 ms), a po poprawnej odpowiedzi 700 ms do następnego pytania.
+- Wyniki zapisz do `document.body` i odczytaj z DOM:
+  `chrome --headless --no-sandbox --virtual-time-budget=4000 --dump-dom file:///…/i.html`
+- Z `file://` nie wczyta się `questions.json` — startuje `SAMPLE`, co do testów wystarcza.
