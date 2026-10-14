@@ -6,7 +6,7 @@ Quiz tłumaczenia PL → EN w stylu terminala. Statyczna strona, bez builda.
 
 ## Funkcje
 - Runda: losowe pytania z `group1` i bonusowe z `group2` — liczbę pytań i punkty ustawiasz w pliku pytań (domyślnie 10 × 1 pkt + 1 × 2 pkt).
-- Zła odpowiedź podświetla pierwszą błędną literę; podpowiedź / pokazanie odpowiedzi daje połowę punktów.
+- Zła odpowiedź podświetla pierwszą błędną literę; każda zła próba zmniejsza punkty za pytanie (100% → 50% → 25% → 0).
 - Zaliczone pytania przygasają w logu.
 - Historia wyników od otwarcia strony (godzina, czas rundy, wynik, zestaw).
 - Własny zestaw pytań: wgraj plik JSON lub wklej go w sekcji „zestaw pytań (JSON)” — zapamiętywany na tym urządzeniu.
@@ -49,8 +49,17 @@ Dla każdej grupy ustawiasz, ile pytań losować do rundy i ile punktów daje od
 - `count: 0` wyłącza grupę z rundy, ale łącznie runda musi mieć co najmniej 1 pytanie.
 
 ### Punktacja
-- Poprawnie za pierwszym razem, bez podpowiedzi: pełne `points`.
-- Po błędnej próbie, podpowiedzi lub „pokaż odpowiedź”: połowa `points`.
+Punkty za pytanie zależą od liczby złych prób przed poprawną odpowiedzią:
+
+| Złe próby | Punkty | Przykład dla `points: 1` |
+|---|---|---|
+| 0 | 100% `points` | 1 |
+| 1 | 50% `points` | 0.5 |
+| 2 | 25% `points` | 0.25 |
+| 3 i więcej | 0 | 0 |
+
+- Podpowiedź ogranicza wynik pytania do najwyżej 50% `points`.
+- „Pokaż odpowiedź” daje 0 pkt.
 - Maksymalny wynik rundy to suma `points` wylosowanych pytań.
 
 ### Sprawdzanie odpowiedzi

@@ -24,6 +24,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:15px
 .tab.now{color:var(--fg);border-color:var(--fg)}
 .tab.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,transparent)}
 .tab.meh{color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 40%,transparent)}
+.tab.zero{color:var(--coral);border-color:color-mix(in srgb,var(--coral) 40%,transparent)}
 .tab.bonus{border-style:dashed}
 h1{margin:0;font-weight:800;font-size:clamp(30px,8vw,56px);line-height:1.08;text-transform:uppercase;text-wrap:balance;letter-spacing:-.01em;overflow-wrap:anywhere}
 h1 .red{color:var(--coral)}
@@ -143,6 +144,8 @@ const store = {
   set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} }
 };
 
+// mnożnik punktów wg liczby złych prób przed poprawną: 0 → 100%, 1 → 50%, 2 → 25%, 3+ → 0
+const SCALE = [1, 0.5, 0.25];
 let data, round, i, tries, points, hintLen, grp, started, setLabel = "";
 const history = [];
 
@@ -202,8 +205,9 @@ function check(e){
   tries++;
   const ok = accepted(r);
   if(ok.includes(typed)){
-    const pts = r.points * (tries===1 && !hintLen ? 1 : 0.5);
-    points = Math.round((points+pts)*100)/100; r.state = tries===1 && !hintLen ? "ok" : "meh";
+    const mult = Math.min(SCALE[tries-1] ?? 0, hintLen ? 0.5 : 1);
+    const pts = Math.round(r.points * mult * 1000)/1000;
+    points = Math.round((points+pts)*1000)/1000; r.state = mult===1 ? "ok" : mult>0 ? "meh" : "zero";
     line(`<span class="p">$</span> ${esc(typed)}`);
     line(`✓ dobrze! +${pts} pkt`, "ok");
     grp.classList.add("done");
