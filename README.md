@@ -9,6 +9,7 @@ Quiz tłumaczenia PL → EN w stylu terminala. Statyczna strona, bez builda.
 - Zła odpowiedź podświetla pierwszą błędną literę; każda zła próba zmniejsza punkty za pytanie (100% → 50% → 25% → 0).
 - Zaliczone pytania przygasają w logu.
 - Timer (przełącznik, domyślnie włączony): 20 s na pytanie. Na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery, na kolejnych od razu. Po czasie można dalej odpowiadać, ale za 50% punktów. Ustawienie zapamiętywane na tym urządzeniu.
+- „Pokaż odpowiedź” (przełącznik, domyślnie włączony): wpisuje odpowiedź w pole — wystarczy Enter. Po wyłączeniu odpowiedź pojawia się tylko w logu i trzeba ją przepisać. Ustawienie zapamiętywane na tym urządzeniu.
 - Historia wyników od otwarcia strony (godzina, czas rundy, wynik, zestaw).
 - Własny zestaw pytań: wgraj plik JSON lub wklej go w sekcji „zestaw pytań (JSON)” — zapamiętywany na tym urządzeniu.
 
