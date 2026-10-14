@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Angielski Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+/* Layout: one terminal-style column — progress tabs, giant question, terminal window with prompt */
+:root{
+  --bg:#0b0d10; --panel:#11141a; --line:#242a32; --fg:#dde1db; --dim:#6c7480;
+  --blue:#4ea1ff; --green:#41d67c; --coral:#f2705b; --yellow:#f6c344;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:15px;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{border:1px solid var(--line);border-radius:4px;padding:3px 8px;color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums}
+.tab.now{color:var(--fg);border-color:var(--fg)}
+.tab.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,transparent)}
+.tab.meh{color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 40%,transparent)}
+.tab.bonus{border-style:dashed}
+h1{margin:0;font-weight:800;font-size:clamp(30px,8vw,56px);line-height:1.08;text-transform:uppercase;text-wrap:balance;letter-spacing:-.01em;overflow-wrap:anywhere}
+h1 .red{color:var(--coral)}
+.sub{color:var(--dim);font-size:13px;margin-top:-10px}
+.sub b{color:var(--yellow);font-weight:700}
+.term{border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
+.bar{display:flex;align-items:center;gap:7px;padding:9px 12px;border-bottom:1px solid var(--line);color:var(--dim);font-size:13px;min-width:0}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.bar .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bar .tag{margin-left:auto;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:11px;white-space:nowrap}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:3px;min-height:150px}
+.log{display:flex;flex-direction:column;gap:3px;max-height:40vh;overflow-y:auto}
+.ln{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.p{color:var(--green)}
+.err{color:var(--coral)}
+.ok{color:var(--green)}
+.info{color:var(--blue)}
+.dim{color:var(--dim)}
+.bad{color:var(--coral);text-decoration:underline 3px;text-underline-offset:4px;background:color-mix(in srgb,var(--coral) 18%,transparent)}
+form{display:flex;align-items:center;gap:8px;margin-top:4px}
+#answer{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--fg);font:inherit;font-size:18px;caret-color:var(--green);padding:4px 0}
+#answer::selection{background:var(--coral);color:var(--bg)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button,.btn{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:5px;padding:8px 12px;cursor:pointer}
+button:hover,.btn:hover{border-color:var(--fg)}
+button:focus-visible,#answer:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.go{color:var(--bg);background:var(--green);border-color:var(--green);font-weight:700}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:10px 16px;font-size:clamp(16px,4.5vw,22px);font-weight:700;align-self:center}
+.pill span{color:var(--yellow)}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+summary{cursor:pointer;color:var(--dim)}
+details[open] summary{margin-bottom:10px}
+textarea{width:100%;min-height:220px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:5px;font:inherit;font-size:12.5px;padding:10px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.msg{font-size:12.5px}
+input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
+@media (prefers-reduced-motion:no-preference){.shake{animation:sh .25s}}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <h1 id="q">…</h1>
+  <div class="sub" id="sub"></div>
+
+  <div class="term" id="term">
+    <div class="bar">
+      <span class="dot" style="background:var(--coral)"></span><span class="dot" style="background:var(--yellow)"></span><span class="dot" style="background:var(--green)"></span>
+      <span class="t">uczen@english: ~</span><span class="tag" id="score">0 pkt</span>
+    </div>
+    <div class="body">
+      <div class="log" id="log"></div>
+      <form id="form" autocomplete="off">
+        <span class="p">$</span>
+        <input id="answer" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Odpowiedź po angielsku" placeholder="wpisz po angielsku…">
+      </form>
+    </div>
+  </div>
+
+  <div class="actions" id="actions">
+    <button type="button" id="hint">podpowiedź</button>
+    <button type="button" id="skip">pokaż odpowiedź</button>
+    <button type="button" id="restart">nowe losowanie</button>
+  </div>
+
+  <details id="cfg">
+    <summary>zestaw pytań (JSON)</summary>
+    <textarea id="json" spellcheck="false" aria-label="JSON z pytaniami"></textarea>
+    <div class="row">
+      <button type="button" class="go" id="load">wczytaj</button>
+      <input type="file" id="file" accept=".json,application/json" aria-label="Plik JSON">
+      <button type="button" id="reset">wróć do questions.json</button>
+      <span class="msg" id="jmsg"></span>
+    </div>
+  </details>
+</div>
+
+<script>
+const SAMPLE = {
+  group1: [
+    {pl:"pies", en:"dog"}, {pl:"kot", en:"cat"}, {pl:"dom", en:"house"},
+    {pl:"jabłko", en:"apple"}, {pl:"szkoła", en:"school"}, {pl:"czerwony", en:"red"},
+    {pl:"książka", en:"book"}, {pl:"woda", en:"water"}, {pl:"przyjaciel", en:["friend","mate"]},
+    {pl:"okno", en:"window"}, {pl:"zielony", en:"green"}, {pl:"mleko", en:"milk"},
+    {pl:"samochód", en:"car"}, {pl:"ptak", en:"bird"}, {pl:"słońce", en:"sun"}
+  ],
+  group2: [
+    {pl:"Mam na imię Ola.", en:["my name is ola","i am ola","i'm ola"]},
+    {pl:"Lubię lody.", en:"i like ice cream"},
+    {pl:"Gdzie jest mój plecak?", en:"where is my backpack"}
+  ]
+};
+const N1 = 10, N2 = 1;
+const $ = id => document.getElementById(id);
+const store = { get(){ try{return localStorage.getItem("q")}catch(e){return null} }, set(v){ try{localStorage.setItem("q",v)}catch(e){} } };
+
+let data, round, i, tries, points, hintLen;
+
+const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
+const accepted = item => (Array.isArray(item.en) ? item.en : [item.en]).map(norm);
+const shuffle = a => { a=[...a]; for(let k=a.length-1;k>0;k--){const j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]]} return a };
+const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function validate(d){
+  if(!d || !Array.isArray(d.group1) || !Array.isArray(d.group2)) throw "Brak tablic group1 i group2.";
+  for(const it of [...d.group1,...d.group2]) if(!it.pl || !it.en) throw "Każde pytanie musi mieć pola pl i en.";
+  if(d.group1.length < 1 || d.group2.length < 1) throw "Obie grupy muszą mieć co najmniej 1 pytanie.";
+  return d;
+}
+
+function newRound(){
+  round = [
+    ...shuffle(data.group1).slice(0,N1).map(x=>({...x,bonus:false})),
+    ...shuffle(data.group2).slice(0,N2).map(x=>({...x,bonus:true}))
+  ];
+  round.forEach(r=>r.state="");
+  i = 0; points = 0; $("log").innerHTML = "";
+  $("form").hidden = false; $("actions").hidden = false;
+  show();
+}
+
+function show(){
+  const r = round[i]; tries = 0; hintLen = 0;
+  $("q").innerHTML = esc(r.pl.replace(/[.?!]$/,"")) + '<span class="red">' + (r.pl.match(/[.?!]$/)?.[0] || ".") + '</span>';
+  $("sub").innerHTML = r.bonus ? "<b>pytanie bonusowe · 2 pkt</b> · przetłumacz zdanie" : "przetłumacz na angielski";
+  $("answer").value = ""; $("answer").focus();
+  tabs(); score();
+}
+
+function tabs(){
+  $("tabs").innerHTML = round.map((r,k)=>`<span class="tab ${k===i?"now":""} ${r.state} ${r.bonus?"bonus":""}">${k+1}${r.bonus?"★":""}</span>`).join("");
+}
+function score(){ $("score").textContent = points + " pkt"; }
+function line(html, cls=""){ const d=document.createElement("div"); d.className="ln "+cls; d.innerHTML=html; $("log").append(d); $("log").scrollTop=1e9; }
+
+function check(e){
+  e.preventDefault();
+  const r = round[i], typed = norm($("answer").value);
+  if(!typed) return;
+  tries++;
+  const ok = accepted(r);
+  if(ok.includes(typed)){
+    const pts = (r.bonus?2:1) * (tries===1 && !hintLen ? 1 : 0.5);
+    points += pts; r.state = tries===1 && !hintLen ? "ok" : "meh";
+    line(`<span class="p">$</span> ${esc(typed)}`);
+    line(`✓ dobrze! +${pts} pkt`, "ok");
+    next(); return;
+  }
+  // znajdź odpowiedź z najdłuższym wspólnym początkiem
+  let best = 0, target = ok[0];
+  for(const a of ok){ let k=0; while(k<a.length && k<typed.length && a[k]===typed[k]) k++; if(k>=best){best=k; target=a} }
+  const shown = typed.length > best
+    ? esc(typed.slice(0,best)) + `<span class="bad">${esc(typed[best])}</span>` + esc(typed.slice(best+1))
+    : esc(typed) + `<span class="bad">_</span>`;
+  line(`<span class="p">$</span> ${shown}`);
+  line(typed.length > best ? `✗ pierwsza zła litera: ${best+1}.` : `✗ brakuje liter na końcu`, "err");
+  const inp = $("answer"); inp.value = typed; inp.focus();
+  inp.setSelectionRange(best, Math.min(best+1, typed.length));
+  $("term").classList.remove("shake"); void $("term").offsetWidth; $("term").classList.add("shake");
+}
+
+function next(){
+  i++;
+  if(i < round.length){ setTimeout(show, 700); return; }
+  setTimeout(()=>{
+    tabs();
+    const max = N1 + 2*N2, wrong = round.filter(r=>r.state!=="ok");
+    $("q").innerHTML = `Koniec<span class="red">!</span>`;
+    $("sub").textContent = "";
+    $("form").hidden = true; $("actions").hidden = true;
+    line(""); line(`wynik: ${points} / ${max} pkt`, "info");
+    if(wrong.length){ line("do powtórki:", "dim"); wrong.forEach(r=>line(`  ${esc(r.pl)} → ${esc(accepted(r)[0])}`, "dim")); }
+    else line("wszystko za pierwszym razem 🎉", "ok");
+    const b = document.createElement("button"); b.className="go"; b.textContent="$ jeszcze raz"; b.style.marginTop="10px"; b.style.alignSelf="flex-start";
+    b.onclick = newRound; $("log").append(b); b.focus();
+  }, 700);
+}
+
+$("form").addEventListener("submit", check);
+$("hint").onclick = () => {
+  const a = accepted(round[i])[0]; hintLen = Math.min(hintLen+1, a.length);
+  line(`podpowiedź: ${esc(a.slice(0,hintLen))}${"_".repeat(a.length-hintLen)}`, "info");
+  $("answer").focus();
+};
+$("skip").onclick = () => {
+  const r = round[i]; r.state = "meh"; tries = 99;
+  line(`odpowiedź: ${esc(accepted(r)[0])} — wpisz ją, żeby iść dalej`, "info");
+  hintLen = 999; $("answer").focus();
+};
+$("restart").onclick = newRound;
+
+function loadJSON(text, quiet, save=true){
+  try{
+    data = validate(JSON.parse(text));
+    $("json").value = JSON.stringify(data, null, 2);
+    if(save) store.set($("json").value);
+    if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano: ${data.group1.length} + ${data.group2.length} pytań</span>`;
+    newRound(); return true;
+  }catch(err){
+    $("jmsg").innerHTML = `<span class="err">${esc(typeof err==="string"?err:"Niepoprawny JSON: "+err.message)}</span>`;
+    return false;
+  }
+}
+$("load").onclick = () => loadJSON($("json").value);
+$("file").onchange = e => { const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>loadJSON(fr.result); fr.readAsText(f); };
+
+// Kolejność: ?set=nazwa (nazwa.json) > zestaw wklejony/wgrany na tym urządzeniu > questions.json > przykład
+const setName = new URLSearchParams(location.search).get("set");
+const fromRepo = f => fetch(f, {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.text(); }).then(t => { if(!loadJSON(t, true, false)) throw 0; });
+const fallback = () => loadJSON(JSON.stringify(SAMPLE), true, false);
+if(setName) fromRepo(encodeURIComponent(setName) + ".json").catch(fallback);
+else { const s = store.get(); if(!(s && loadJSON(s, true))) fromRepo("questions.json").catch(fallback); }
+$("reset").onclick = () => { try{localStorage.removeItem("q")}catch(e){} location.reload(); };
+</script>
+
+</body>
+</html>

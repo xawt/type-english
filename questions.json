@@ -1,0 +1,85 @@
+{
+  "group1": [
+    {
+      "pl": "pies",
+      "en": "dog"
+    },
+    {
+      "pl": "kot",
+      "en": "cat"
+    },
+    {
+      "pl": "dom",
+      "en": "house"
+    },
+    {
+      "pl": "jabłko",
+      "en": "apple"
+    },
+    {
+      "pl": "szkoła",
+      "en": "school"
+    },
+    {
+      "pl": "czerwony",
+      "en": "red"
+    },
+    {
+      "pl": "książka",
+      "en": "book"
+    },
+    {
+      "pl": "woda",
+      "en": "water"
+    },
+    {
+      "pl": "przyjaciel",
+      "en": [
+        "friend",
+        "mate"
+      ]
+    },
+    {
+      "pl": "okno",
+      "en": "window"
+    },
+    {
+      "pl": "zielony",
+      "en": "green"
+    },
+    {
+      "pl": "mleko",
+      "en": "milk"
+    },
+    {
+      "pl": "samochód",
+      "en": "car"
+    },
+    {
+      "pl": "ptak",
+      "en": "bird"
+    },
+    {
+      "pl": "słońce",
+      "en": "sun"
+    }
+  ],
+  "group2": [
+    {
+      "pl": "Mam na imię Ola.",
+      "en": [
+        "my name is ola",
+        "i am ola",
+        "i'm ola"
+      ]
+    },
+    {
+      "pl": "Lubię lody.",
+      "en": "i like ice cream"
+    },
+    {
+      "pl": "Gdzie jest mój plecak?",
+      "en": "where is my backpack"
+    }
+  ]
+}
