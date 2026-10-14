@@ -45,6 +45,7 @@ Dla każdej grupy ustawiasz, ile pytań losować do rundy i ile punktów daje od
 | `pl` | tekst pytania (po polsku) | — |
 | `en` | poprawna odpowiedź: tekst albo lista akceptowanych wariantów | — |
 
+- Tekst w nawiasach w `en` jest opcjonalny: `"enter (your PIN number)"` zalicza `enter your pin number` i `enter`, a `"(a) broken-down (machine)"` każdą kombinację z nawiasami i bez. Podpowiedź pokazuje pełną wersję.
 - `count` i `points` można pominąć — wtedy obowiązują wartości domyślne.
 - Grupa może być też samą listą pytań (starszy format): `"group1": [ { "pl": "pies", "en": "dog" } ]`.
 - `count: 0` wyłącza grupę z rundy, ale łącznie runda musi mieć co najmniej 1 pytanie.
