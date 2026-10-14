@@ -60,6 +60,10 @@ textarea{width:100%;min-height:220px;background:var(--panel);color:var(--fg);bor
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
 .msg{font-size:12.5px}
 input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
+.qgrp{display:flex;flex-direction:column;gap:3px}
+.qgrp.done{opacity:.38}
+.qgrp.done .bad{background:none}
+@media (prefers-reduced-motion:no-preference){.qgrp{transition:opacity .4s}}
 @media (prefers-reduced-motion:no-preference){.shake{animation:sh .25s}}
 @keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 </style>
@@ -123,7 +127,7 @@ const N1 = 10, N2 = 1;
 const $ = id => document.getElementById(id);
 const store = { get(){ try{return localStorage.getItem("q")}catch(e){return null} }, set(v){ try{localStorage.setItem("q",v)}catch(e){} } };
 
-let data, round, i, tries, points, hintLen;
+let data, round, i, tries, points, hintLen, grp;
 
 const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
 const accepted = item => (Array.isArray(item.en) ? item.en : [item.en]).map(norm);
@@ -143,13 +147,14 @@ function newRound(){
     ...shuffle(data.group2).slice(0,N2).map(x=>({...x,bonus:true}))
   ];
   round.forEach(r=>r.state="");
-  i = 0; points = 0; $("log").innerHTML = "";
+  i = 0; points = 0; grp = null; $("log").innerHTML = "";
   $("form").hidden = false; $("actions").hidden = false;
   show();
 }
 
 function show(){
   const r = round[i]; tries = 0; hintLen = 0;
+  group();
   $("q").innerHTML = esc(r.pl.replace(/[.?!]$/,"")) + '<span class="red">' + (r.pl.match(/[.?!]$/)?.[0] || ".") + '</span>';
   $("sub").innerHTML = r.bonus ? "<b>pytanie bonusowe · 2 pkt</b> · przetłumacz zdanie" : "przetłumacz na angielski";
   $("answer").value = ""; $("answer").focus();
@@ -160,7 +165,8 @@ function tabs(){
   $("tabs").innerHTML = round.map((r,k)=>`<span class="tab ${k===i?"now":""} ${r.state} ${r.bonus?"bonus":""}">${k+1}${r.bonus?"★":""}</span>`).join("");
 }
 function score(){ $("score").textContent = points + " pkt"; }
-function line(html, cls=""){ const d=document.createElement("div"); d.className="ln "+cls; d.innerHTML=html; $("log").append(d); $("log").scrollTop=1e9; }
+function group(){ grp = document.createElement("div"); grp.className = "qgrp"; $("log").append(grp); }
+function line(html, cls=""){ const d=document.createElement("div"); d.className="ln "+cls; d.innerHTML=html; (grp||$("log")).append(d); $("log").scrollTop=1e9; }
 
 function check(e){
   e.preventDefault();
@@ -173,6 +179,7 @@ function check(e){
     points += pts; r.state = tries===1 && !hintLen ? "ok" : "meh";
     line(`<span class="p">$</span> ${esc(typed)}`);
     line(`✓ dobrze! +${pts} pkt`, "ok");
+    grp.classList.add("done");
     next(); return;
   }
   // znajdź odpowiedź z najdłuższym wspólnym początkiem
@@ -197,7 +204,7 @@ function next(){
     $("q").innerHTML = `Koniec<span class="red">!</span>`;
     $("sub").textContent = "";
     $("form").hidden = true; $("actions").hidden = true;
-    line(""); line(`wynik: ${points} / ${max} pkt`, "info");
+    group(); line(""); line(`wynik: ${points} / ${max} pkt`, "info");
     if(wrong.length){ line("do powtórki:", "dim"); wrong.forEach(r=>line(`  ${esc(r.pl)} → ${esc(accepted(r)[0])}`, "dim")); }
     else line("wszystko za pierwszym razem 🎉", "ok");
     const b = document.createElement("button"); b.className="go"; b.textContent="$ jeszcze raz"; b.style.marginTop="10px"; b.style.alignSelf="flex-start";
