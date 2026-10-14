@@ -115,6 +115,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
   </div>
 
   <label class="switch"><input type="checkbox" role="switch" id="timerOn" checked> timer · 20 s na pytanie (połowa punktów po czasie)</label>
+  <label class="switch"><input type="checkbox" role="switch" id="fillOn" checked> „pokaż odpowiedź” wpisuje ją w pole</label>
 
   <details id="histbox" open>
     <summary>historia (od otwarcia strony)</summary>
@@ -322,11 +323,17 @@ function hint(){
   line(`podpowiedź: ${esc(a.slice(0,len))}${"_".repeat(a.length-len)} (punkty ×${HINT_MULT**hints})`, "info");
 }
 $("hint").onclick = hint;
+try{ $("fillOn").checked = localStorage.getItem("fill") !== "0" }catch(e){}
+$("fillOn").onchange = () => {
+  try{ localStorage.setItem("fill", $("fillOn").checked ? "1" : "0") }catch(e){}
+  $("answer").focus();
+};
 $("answer").addEventListener("keydown", e => { if(e.key === "Tab" && !e.shiftKey){ e.preventDefault(); hint(); } });
 $("skip").onclick = () => {
-  const r = round[i]; r.state = "meh"; tries = 99;
-  line(`odpowiedź: ${esc(accepted(r)[0])} — wpisz ją, żeby iść dalej`, "info");
-  $("answer").focus();
+  const r = round[i], a = accepted(r)[0], inp = $("answer"), fill = $("fillOn").checked; r.state = "meh"; tries = 99;
+  line(`odpowiedź: ${esc(a)} — ${fill ? "enter, żeby iść dalej" : "wpisz ją, żeby iść dalej"}`, "info");
+  if(fill) inp.value = a;
+  inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
 };
 $("restart").onclick = newRound;
 
