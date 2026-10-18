@@ -51,7 +51,7 @@ Dla każdej grupy ustawiasz, ile pytań losować do rundy i ile punktów daje od
 - Tekst w nawiasach w `en` jest opcjonalny: `"enter (your PIN number)"` zalicza `enter your pin number` i `enter`, a `"(a) broken-down (machine)"` każdą kombinację z nawiasami i bez. Podpowiedź pokazuje pełną wersję.
 - `count` i `points` można pominąć — wtedy obowiązują wartości domyślne.
 - Grupa może być też samą listą pytań (starszy format): `"group1": [ { "pl": "pies", "en": "dog" } ]`.
-- Zestaw niemiecki: `"lang": "de"` i pytania `{ "pl": "krzesło", "de": "der Stuhl" }`. Umlauty można wpisać jako `ae oe ue ss` albo przyciskami `ä ö ü ß` obok pola.
+- Zestaw niemiecki: `"lang": "de"` i pytania `{ "pl": "krzesło", "de": "der Stuhl" }`. W niemieckim liczy się wielkość liter (rzeczowniki wielką literą: `der Stuhl`, nie `der stuhl`). Umlauty można wpisać jako `ae oe ue ss` albo przyciskami `ä ö ü ß` obok pola.
 - `group2` można pominąć — wtedy runda ma tylko pytania z `group1`.
 - `count: 0` wyłącza grupę z rundy, ale łącznie runda musi mieć co najmniej 1 pytanie.
 

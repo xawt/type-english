@@ -158,13 +158,14 @@ const SAMPLE = {
 };
 // domyślnie: ile pytań losować z grupy i ile punktów za odpowiedź (gdy grupa jest samą tablicą)
 const DEFAULTS = { group1: {count:10, points:1}, group2: {count:1, points:2} };
-// języki zestawów: pole z odpowiedzią nazywa się kodem języka ("en", "de"); keys = przyciski znaków pod ręką
+// języki zestawów: pole z odpowiedzią nazywa się kodem języka ("en", "de"); keys = przyciski znaków pod ręką;
+// cs = wielkość liter ma znaczenie (rzeczowniki w niemieckim)
 const LANGS = {
-  en: {title:"Angielski Terminal", who:"english", po:"po angielsku", na:"na angielski", keys:[]},
-  de: {title:"Niemiecki Terminal", who:"deutsch", po:"po niemiecku", na:"na niemiecki", keys:["ä","ö","ü","ß"]}
+  en: {title:"Angielski Terminal", who:"english", po:"po angielsku", na:"na angielski", keys:[], cs:false},
+  de: {title:"Niemiecki Terminal", who:"deutsch", po:"po niemiecku", na:"na niemiecki", keys:["ä","ö","ü","ß"], cs:true}
 };
 // zamienniki do wpisania bez niemieckiej klawiatury
-const ALT = {"ä":"ae", "ö":"oe", "ü":"ue", "ß":"ss"};
+const ALT = {"ä":"ae", "ö":"oe", "ü":"ue", "ß":"ss", "Ä":"Ae", "Ö":"Oe", "Ü":"Ue"};
 const $ = id => document.getElementById(id);
 const store = {
   get(){ try{return localStorage.getItem("q")}catch(e){return null} },
@@ -186,7 +187,8 @@ let deadline = 0, tick = 0, timedOut = false, waitStart = false;
 let data, round, i, tries, points, hints, grp, started, setLabel = "";
 const history = [];
 
-const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
+const low = s => LANGS[data?.lang]?.cs ? s : s.toLowerCase();
+const norm = s => low(s).replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
 // tekst w nawiasach jest opcjonalny: "enter (your PIN)" → "enter your pin", "enter"; pierwszy wariant = pełny
 const variants = s => s.split(/(\([^()]*\))/).reduce((out, part) => /^\(.*\)$/.test(part)
   ? out.flatMap(o => [o + part.slice(1,-1), o])
@@ -291,12 +293,13 @@ function check(e){
     next(); return;
   }
   // znajdź odpowiedź z najdłuższym wspólnym początkiem
-  const best = ms.reduce((b, m) => m.j >= b.j ? m : b).j;
+  const bm = ms.reduce((b, m) => m.j >= b.j ? m : b), best = bm.j;
+  const caseOnly = typed.length > best && typed[best].toLowerCase() === (bm.a[bm.k] || "").toLowerCase();
   const shown = typed.length > best
     ? esc(typed.slice(0,best)) + `<span class="bad">${esc(typed[best])}</span>` + esc(typed.slice(best+1))
     : esc(typed) + `<span class="bad">_</span>`;
   line(`<span class="p">$</span> ${shown}`);
-  line(typed.length > best ? `✗ pierwsza zła litera: ${best+1}.` : `✗ brakuje liter na końcu`, "err");
+  line(caseOnly ? `✗ wielkość litery: ${best+1}. (rzeczowniki wielką literą)` : typed.length > best ? `✗ pierwsza zła litera: ${best+1}.` : `✗ brakuje liter na końcu`, "err");
   const inp = $("answer"); inp.value = typed; inp.focus();
   inp.setSelectionRange(best, Math.min(best+1, typed.length));
   $("term").classList.remove("shake"); void $("term").offsetWidth; $("term").classList.add("shake");
@@ -341,7 +344,7 @@ $("timerOn").onchange = () => {
   $("answer").focus();
 };
 function hint(){
-  const inp = $("answer"), typed = inp.value.toLowerCase().replace(/[’`]/g,"'").replace(/\s+/g," ").trimStart();
+  const inp = $("answer"), typed = low(inp.value).replace(/[’`]/g,"'").replace(/\s+/g," ").trimStart();
   // odpowiedź z najdłuższym poprawnym początkiem; przy remisie pierwsza (pełna)
   let best = -1, a;
   for(const o of accepted(round[i])){ const {k} = match(o, typed); if(k>best){best=k; a=o} }

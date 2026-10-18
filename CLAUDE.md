@@ -14,7 +14,7 @@ Quiz tłumaczenia PL → EN / DE, styl terminala. Cała apka to jeden plik `inde
 - Runda: `count` pytań z każdej grupy, każde warte `points` grupy (domyślnie `DEFAULTS`: 10 × 1 + 1 × 2). Mnożnik wg złych prób w `SCALE` (1 / 0.5 / 0.25 / 0 od 3 złych), podpowiedź (przycisk albo Tab) ucina wpis na pierwszym błędzie i dopisuje 3 kolejne znaki, najdalej do 2/3 odpowiedzi; każda mnoży punkty × 0.5 (`HINT_*`), „pokaż odpowiedź” = 0 (przy włączonym `#fillOn`, localStorage `fill`, domyślnie włączony, wpisuje odpowiedź w pole). Maks. = suma `points` wylosowanych pytań.
 - Timer: `T_LIMIT = 20` s na pytanie, po czasie mnożnik `T_MULT = 0.5` (mnożony z `SCALE`). Pierwsze pytanie rundy czeka na pierwszą literę (`waitStart`), kolejne liczą od `show()`. Przełącznik `#timerOn`, stan w localStorage `timer` (domyślnie włączony).
 - `variants()` rozwija nawiasy w `en` na warianty (z tekstem i bez; pierwszy = pełny, używany w podpowiedzi). `accepted()` = unikalne warianty po `norm()`.
-- Odpowiedzi normalizowane w `norm()` (małe litery, apostrofy, końcowa interpunkcja, spacje).
+- Odpowiedzi normalizowane w `norm()` (małe litery — chyba że język ma `cs: true`, jak `de` — apostrofy, końcowa interpunkcja, spacje).
 - Porównanie wpisu z odpowiedzią przez `match()` — `ALT` pozwala wpisać `ä ö ü ß` jako `ae oe ue ss`.
 - Kolejność źródeł pytań: `?set=nazwa` (`sets/nazwa.json`) > wybór z listy w localStorage `set` (plik albo `""` = własny) > własny zestaw (`q`, nazwa w `qname`) > pierwszy ze spisu > `SAMPLE`.
 - Log terminala: każde pytanie ma swoją grupę `.qgrp`; po zaliczeniu dostaje `.done` (przygaszenie).
