@@ -1,6 +1,6 @@
 # type-english
 
-Quiz tłumaczenia PL → EN w stylu terminala. Statyczna strona, bez builda.
+Quiz tłumaczenia PL → EN / DE w stylu terminala. Statyczna strona, bez builda.
 
 **Online:** https://xawt.github.io/type-english/
 
@@ -11,10 +11,11 @@ Quiz tłumaczenia PL → EN w stylu terminala. Statyczna strona, bez builda.
 - Timer (przełącznik, domyślnie włączony): 20 s na pytanie. Na pierwszym pytaniu rundy odliczanie rusza od pierwszej wpisanej litery, na kolejnych od razu. Po czasie można dalej odpowiadać, ale za 50% punktów. Ustawienie zapamiętywane na tym urządzeniu.
 - „Pokaż odpowiedź” (przełącznik, domyślnie włączony): wpisuje odpowiedź w pole — wystarczy Enter. Po wyłączeniu odpowiedź pojawia się tylko w logu i trzeba ją przepisać. Ustawienie zapamiętywane na tym urządzeniu.
 - Historia wyników od otwarcia strony (godzina, czas rundy, wynik, zestaw).
+- Wybór zestawu z listy u góry strony (zestawy z katalogu `sets/`), wybór zapamiętywany na tym urządzeniu.
 - Własny zestaw pytań: wgraj plik JSON lub wklej go w sekcji „zestaw pytań (JSON)” — zapamiętywany na tym urządzeniu.
 
 ## Format pliku pytań
-Plik JSON z dwiema grupami: `group1` (zwykłe pytania) i `group2` (pytania bonusowe, oznaczone ★).
+Plik JSON z grupami `group1` (zwykłe pytania) i opcjonalnie `group2` (pytania bonusowe, oznaczone ★) oraz językiem `lang`.
 Dla każdej grupy ustawiasz, ile pytań losować do rundy i ile punktów daje odpowiedź.
 
 ```json
@@ -42,13 +43,16 @@ Dla każdej grupy ustawiasz, ile pytań losować do rundy i ile punktów daje od
 |---|---|---|
 | `count` | ile pytań z grupy losować do jednej rundy (liczba całkowita ≥ 0; gdy pytań jest mniej, bierze wszystkie) | `group1`: 10, `group2`: 1 |
 | `points` | punkty za poprawną odpowiedź za pierwszym razem, bez podpowiedzi (liczba > 0, może być ułamkowa) | `group1`: 1, `group2`: 2 |
+| `lang` | język odpowiedzi: `en` albo `de`; pole z odpowiedzią w pytaniu nazywa się tak samo | `en` |
 | `questions` | lista pytań, co najmniej 1 | — |
 | `pl` | tekst pytania (po polsku) | — |
-| `en` | poprawna odpowiedź: tekst albo lista akceptowanych wariantów | — |
+| `en` / `de` | poprawna odpowiedź (pole wg `lang`): tekst albo lista akceptowanych wariantów | — |
 
 - Tekst w nawiasach w `en` jest opcjonalny: `"enter (your PIN number)"` zalicza `enter your pin number` i `enter`, a `"(a) broken-down (machine)"` każdą kombinację z nawiasami i bez. Podpowiedź pokazuje pełną wersję.
 - `count` i `points` można pominąć — wtedy obowiązują wartości domyślne.
 - Grupa może być też samą listą pytań (starszy format): `"group1": [ { "pl": "pies", "en": "dog" } ]`.
+- Zestaw niemiecki: `"lang": "de"` i pytania `{ "pl": "krzesło", "de": "der Stuhl" }`. Umlauty można wpisać jako `ae oe ue ss` albo przyciskami `ä ö ü ß` obok pola.
+- `group2` można pominąć — wtedy runda ma tylko pytania z `group1`.
 - `count: 0` wyłącza grupę z rundy, ale łącznie runda musi mieć co najmniej 1 pytanie.
 
 ### Punktacja
@@ -69,8 +73,12 @@ Punkty za pytanie zależą od liczby złych prób przed poprawną odpowiedzią:
 ### Sprawdzanie odpowiedzi
 Wielkość liter, końcowe `. ! ? ,`, nadmiarowe spacje są ignorowane, a apostrofy `’` i `` ` `` traktowane jak `'`.
 
-## Inne zestawy w repo
-Dodaj `nazwa.json` obok `index.html` i otwórz `…/type-english/?set=nazwa`.
+## Zestawy w repo
+Zestawy leżą w `sets/`, a lista wyboru bierze je ze spisu `sets/index.json`:
+```json
+[ { "file": "de-meble.json", "name": "niemiecki · meble" } ]
+```
+Nowy zestaw: dodaj plik do `sets/` i wpis do `sets/index.json`. Link do konkretnego zestawu: `…/type-english/?set=de-meble`.
 
 ## Lokalnie
 ```sh
