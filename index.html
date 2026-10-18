@@ -45,6 +45,8 @@ h1 .red{color:var(--coral)}
 .dim{color:var(--dim)}
 .bad{color:var(--coral);text-decoration:underline 3px;text-underline-offset:4px;background:color-mix(in srgb,var(--coral) 18%,transparent)}
 form{display:flex;align-items:center;gap:8px;margin-top:4px;flex:none}
+.keys{display:flex;gap:4px;flex:none}
+.keys button{padding:2px 8px;font-size:14px}
 #answer{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--fg);font:inherit;font-size:18px;caret-color:var(--green);padding:4px 0}
 #answer::selection{background:var(--coral);color:var(--bg)}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
@@ -71,6 +73,9 @@ textarea{width:100%;min-height:220px;background:var(--panel);color:var(--fg);bor
 .switch input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.switch input::after{transition:left .15s}}
 .msg{font-size:12.5px}
+.pick{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:13px;min-width:0}
+select{font:inherit;font-size:13px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:6px 10px;min-width:0;max-width:100%;cursor:pointer}
+select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
 .qgrp{display:flex;flex-direction:column;gap:3px}
 .qgrp.done{opacity:.38}
@@ -90,6 +95,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
 
 
 <div class="wrap">
+  <label class="pick" id="pick" hidden>zestaw <select id="set"></select></label>
   <div class="tabs" id="tabs"></div>
   <h1><span id="q">…</span></h1>
   <div class="sub" id="sub"></div>
@@ -97,13 +103,14 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
   <div class="term" id="term">
     <div class="bar">
       <span class="dot" style="background:var(--coral)"></span><span class="dot" style="background:var(--yellow)"></span><span class="dot" style="background:var(--green)"></span>
-      <span class="t">uczen@english: ~</span><span class="tag" id="timer" hidden></span><span class="tag" id="score">0 pkt</span>
+      <span class="t" id="who">uczen@english: ~</span><span class="tag" id="timer" hidden></span><span class="tag" id="score">0 pkt</span>
     </div>
     <div class="body">
       <div class="log" id="log"></div>
       <form id="form" autocomplete="off">
         <span class="p">$</span>
         <input id="answer" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Odpowiedź po angielsku" placeholder="wpisz po angielsku…">
+        <span class="keys" id="keys" hidden></span>
       </form>
     </div>
   </div>
@@ -128,7 +135,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
     <div class="row">
       <button type="button" class="go" id="load">wczytaj</button>
       <input type="file" id="file" accept=".json,application/json" aria-label="Plik JSON">
-      <button type="button" id="reset">wróć do questions.json</button>
+      <button type="button" id="reset" hidden>usuń własny zestaw</button>
       <span class="msg" id="jmsg"></span>
     </div>
   </details>
@@ -151,11 +158,22 @@ const SAMPLE = {
 };
 // domyślnie: ile pytań losować z grupy i ile punktów za odpowiedź (gdy grupa jest samą tablicą)
 const DEFAULTS = { group1: {count:10, points:1}, group2: {count:1, points:2} };
+// języki zestawów: pole z odpowiedzią nazywa się kodem języka ("en", "de"); keys = przyciski znaków pod ręką;
+// cs = wielkość liter ma znaczenie (rzeczowniki w niemieckim)
+const LANGS = {
+  en: {title:"Angielski Terminal", who:"english", po:"po angielsku", na:"na angielski", keys:[], cs:false},
+  de: {title:"Niemiecki Terminal", who:"deutsch", po:"po niemiecku", na:"na niemiecki", keys:["ä","ö","ü","ß"], cs:true}
+};
+// zamienniki do wpisania bez niemieckiej klawiatury
+const ALT = {"ä":"ae", "ö":"oe", "ü":"ue", "ß":"ss", "Ä":"Ae", "Ö":"Oe", "Ü":"Ue"};
 const $ = id => document.getElementById(id);
 const store = {
   get(){ try{return localStorage.getItem("q")}catch(e){return null} },
   name(){ try{return localStorage.getItem("qname") || "własny zestaw"}catch(e){return "własny zestaw"} },
-  set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} }
+  set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} },
+  // wybrany zestaw: plik z sets/ albo "" = własny
+  choice(){ try{return localStorage.getItem("set")}catch(e){return null} },
+  choose(v){ try{localStorage.setItem("set",v)}catch(e){} }
 };
 
 // mnożnik punktów wg liczby złych prób przed poprawną: 0 → 100%, 1 → 50%, 2 → 25%, 3+ → 0
@@ -169,24 +187,39 @@ let deadline = 0, tick = 0, timedOut = false, waitStart = false;
 let data, round, i, tries, points, hints, grp, started, setLabel = "";
 const history = [];
 
-const norm = s => s.toLowerCase().replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
+const low = s => LANGS[data?.lang]?.cs ? s : s.toLowerCase();
+const norm = s => low(s).replace(/[’`]/g,"'").replace(/[.!?,]+$/,"").replace(/\s+/g," ").trim();
 // tekst w nawiasach jest opcjonalny: "enter (your PIN)" → "enter your pin", "enter"; pierwszy wariant = pełny
 const variants = s => s.split(/(\([^()]*\))/).reduce((out, part) => /^\(.*\)$/.test(part)
   ? out.flatMap(o => [o + part.slice(1,-1), o])
   : out.map(o => o + part), [""]);
-const accepted = item => [...new Set((Array.isArray(item.en) ? item.en : [item.en]).flatMap(variants).map(norm))];
+const answers = item => { const a = item[data.lang]; return Array.isArray(a) ? a : [a]; };
+const accepted = item => [...new Set(answers(item).flatMap(variants).map(norm))];
+// najdłuższy wspólny początek odpowiedzi a i wpisu t: k = znaki odpowiedzi, j = znaki wpisu (ä może być wpisane jako ae itd.)
+function match(a, t){
+  let k = 0, j = 0;
+  while(k < a.length && j < t.length){
+    if(a[k] === t[j]){ k++; j++; }
+    else if(ALT[a[k]] && t.startsWith(ALT[a[k]], j)){ j += ALT[a[k]].length; k++; }
+    else break;
+  }
+  return {k, j};
+}
 const shuffle = a => { a=[...a]; for(let k=a.length-1;k>0;k--){const j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]]} return a };
 const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 
 // grupa: tablica pytań albo { count, points, questions: [...] }
 function validate(d){
-  if(!d || !d.group1 || !d.group2) throw "Brak grup group1 i group2.";
-  const out = {};
+  if(!d || !d.group1) throw "Brak grupy group1.";
+  const lang = d.lang ?? "en";
+  if(!LANGS[lang]) throw `Nieznany język: ${lang} (dostępne: ${Object.keys(LANGS).join(", ")}).`;
+  const out = {lang};
   for(const name of ["group1","group2"]){
-    const g = Array.isArray(d[name]) ? {questions: d[name]} : d[name];
+    // group2 (bonusowa) jest opcjonalna
+    const g = !d[name] ? {count: 0, questions: []} : Array.isArray(d[name]) ? {questions: d[name]} : d[name];
     const {count = DEFAULTS[name].count, points = DEFAULTS[name].points, questions} = g;
-    if(!Array.isArray(questions) || questions.length < 1) throw `${name}: potrzebna lista pytań (co najmniej 1).`;
-    for(const it of questions) if(!it.pl || !it.en) throw "Każde pytanie musi mieć pola pl i en.";
+    if(!Array.isArray(questions) || (d[name] && questions.length < 1)) throw `${name}: potrzebna lista pytań (co najmniej 1).`;
+    for(const it of questions) if(!it.pl || !it[lang]) throw `Każde pytanie musi mieć pola pl i ${lang}.`;
     if(!Number.isInteger(count) || count < 0) throw `${name}: count musi być liczbą całkowitą ≥ 0.`;
     if(typeof points !== "number" || !(points > 0)) throw `${name}: points musi być liczbą > 0.`;
     out[name] = {count, points, questions};
@@ -210,7 +243,7 @@ function show(){
   const r = round[i]; tries = 0; hints = 0;
   group();
   $("q").innerHTML = esc(r.pl.replace(/[.?!]$/,"")) + '<span class="red">' + (r.pl.match(/[.?!]$/)?.[0] || ".") + '</span>';
-  $("sub").innerHTML = r.bonus ? `<b>pytanie bonusowe · ${r.points} pkt</b> · przetłumacz zdanie` : `przetłumacz na angielski · ${r.points} pkt`;
+  $("sub").innerHTML = r.bonus ? `<b>pytanie bonusowe · ${r.points} pkt</b> · przetłumacz zdanie` : `przetłumacz ${LANGS[data.lang].na} · ${r.points} pkt`;
   $("answer").value = ""; $("answer").focus();
   tabs(); score(); armTimer();
 }
@@ -248,7 +281,8 @@ function check(e){
   if(!typed) return;
   tries++;
   const ok = accepted(r);
-  if(ok.includes(typed)){
+  const ms = ok.map(a => ({a, ...match(a, typed)}));
+  if(ms.some(m => m.k === m.a.length && m.j === typed.length)){
     stopTimer();
     const mult = (SCALE[tries-1] ?? 0) * HINT_MULT**hints * (timedOut ? T_MULT : 1);
     const pts = Math.round(r.points * mult * 1000)/1000;
@@ -259,13 +293,13 @@ function check(e){
     next(); return;
   }
   // znajdź odpowiedź z najdłuższym wspólnym początkiem
-  let best = 0, target = ok[0];
-  for(const a of ok){ let k=0; while(k<a.length && k<typed.length && a[k]===typed[k]) k++; if(k>=best){best=k; target=a} }
+  const bm = ms.reduce((b, m) => m.j >= b.j ? m : b), best = bm.j;
+  const caseOnly = typed.length > best && typed[best].toLowerCase() === (bm.a[bm.k] || "").toLowerCase();
   const shown = typed.length > best
     ? esc(typed.slice(0,best)) + `<span class="bad">${esc(typed[best])}</span>` + esc(typed.slice(best+1))
     : esc(typed) + `<span class="bad">_</span>`;
   line(`<span class="p">$</span> ${shown}`);
-  line(typed.length > best ? `✗ pierwsza zła litera: ${best+1}.` : `✗ brakuje liter na końcu`, "err");
+  line(caseOnly ? `✗ wielkość litery: ${best+1}. (rzeczowniki wielką literą)` : typed.length > best ? `✗ pierwsza zła litera: ${best+1}.` : `✗ brakuje liter na końcu`, "err");
   const inp = $("answer"); inp.value = typed; inp.focus();
   inp.setSelectionRange(best, Math.min(best+1, typed.length));
   $("term").classList.remove("shake"); void $("term").offsetWidth; $("term").classList.add("shake");
@@ -310,10 +344,10 @@ $("timerOn").onchange = () => {
   $("answer").focus();
 };
 function hint(){
-  const inp = $("answer"), typed = inp.value.toLowerCase().replace(/[’`]/g,"'").replace(/\s+/g," ").trimStart();
+  const inp = $("answer"), typed = low(inp.value).replace(/[’`]/g,"'").replace(/\s+/g," ").trimStart();
   // odpowiedź z najdłuższym poprawnym początkiem; przy remisie pierwsza (pełna)
   let best = -1, a;
-  for(const o of accepted(round[i])){ let k=0; while(k<o.length && k<typed.length && o[k]===typed[k]) k++; if(k>best){best=k; a=o} }
+  for(const o of accepted(round[i])){ const {k} = match(o, typed); if(k>best){best=k; a=o} }
   const max = Math.floor(a.length * HINT_MAX);
   inp.focus();
   if(best >= max){ line(`podpowiedź działa do ${max}. znaku — dalej bez niej`, "dim"); return; }
@@ -337,11 +371,26 @@ $("skip").onclick = () => {
 };
 $("restart").onclick = newRound;
 
+function applyLang(){
+  const L = LANGS[data.lang], inp = $("answer");
+  document.title = L.title; $("who").textContent = `uczen@${L.who}: ~`;
+  inp.placeholder = `wpisz ${L.po}…`; inp.setAttribute("aria-label", `Odpowiedź ${L.po}`); inp.lang = data.lang;
+  $("keys").innerHTML = L.keys.map(c => `<button type="button" tabindex="-1">${c}</button>`).join("");
+  $("keys").hidden = !L.keys.length;
+}
+// przyciski znaków: wstawiają znak w miejscu kursora, pole zostaje w fokusie
+$("keys").onpointerdown = e => e.preventDefault();
+$("keys").onclick = e => {
+  const b = e.target.closest("button"), inp = $("answer"); if(!b) return;
+  inp.setRangeText(b.textContent, inp.selectionStart, inp.selectionEnd, "end");
+  inp.focus(); inp.dispatchEvent(new Event("input"));
+};
+
 function loadJSON(text, quiet, save=true, label="własny zestaw"){
   try{
-    data = validate(JSON.parse(text)); setLabel = label;
+    data = validate(JSON.parse(text)); setLabel = label; applyLang();
     $("json").value = JSON.stringify(data, null, 2);
-    if(save) store.set($("json").value, label);
+    if(save){ store.set($("json").value, label); store.choose(""); fillSets(""); }
     if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano ${esc(label)}: losowane ${Math.min(data.group1.count,data.group1.questions.length)} z ${data.group1.questions.length} + ${Math.min(data.group2.count,data.group2.questions.length)} z ${data.group2.questions.length} pytań</span>`;
     newRound(); return true;
   }catch(err){
@@ -352,13 +401,32 @@ function loadJSON(text, quiet, save=true, label="własny zestaw"){
 $("load").onclick = () => loadJSON($("json").value);
 $("file").onchange = e => { const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>loadJSON(fr.result, false, true, f.name); fr.readAsText(f); };
 
-// Kolejność: ?set=nazwa (nazwa.json) > zestaw wklejony/wgrany na tym urządzeniu > questions.json > przykład
-const setName = new URLSearchParams(location.search).get("set");
-const fromRepo = f => fetch(f, {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.text(); }).then(t => { if(!loadJSON(t, true, false, f)) throw 0; });
+// zestawy z sets/index.json; kolejność: ?set=nazwa (sets/nazwa.json) > zapamiętany wybór > własny zestaw > pierwszy ze spisu > przykład
+let SETS = [];
 const fallback = () => loadJSON(JSON.stringify(SAMPLE), true, false, "przykład");
-if(setName) fromRepo(encodeURIComponent(setName) + ".json").catch(fallback);
-else { const s = store.get(); if(!(s && loadJSON(s, true, true, store.name()))) fromRepo("questions.json").catch(fallback); }
-$("reset").onclick = () => { try{localStorage.removeItem("q"); localStorage.removeItem("qname")}catch(e){} location.reload(); };
+const fromRepo = f => fetch("sets/" + encodeURIComponent(f), {cache:"no-store"})
+  .then(r => { if(!r.ok) throw 0; return r.text(); })
+  .then(t => { if(!loadJSON(t, true, false, SETS.find(s=>s.file===f)?.name || f)) throw 0; });
+function fillSets(cur){
+  $("set").innerHTML = SETS.map(s=>`<option value="${esc(s.file)}">${esc(s.name)}</option>`).join("")
+    + (store.get() ? `<option value="">${store.name()==="własny zestaw" ? "własny zestaw" : "własny: "+esc(store.name())}</option>` : "");
+  $("set").value = cur; $("pick").hidden = !$("set").options.length; $("reset").hidden = !store.get();
+}
+function openSet(v){
+  if(v === "") loadJSON(store.get(), true, false, store.name()) || fallback();
+  else if(v) fromRepo(v).catch(fallback);
+  else fallback();
+}
+$("set").onchange = () => { const v = $("set").value; store.choose(v); window.history.replaceState(null, "", location.pathname); openSet(v); };
+fetch("sets/index.json", {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.json(); }).catch(() => []).then(list => {
+  SETS = Array.isArray(list) ? list.filter(s => s && s.file).map(s => ({file: String(s.file), name: String(s.name || s.file)})) : [];
+  const url = new URLSearchParams(location.search).get("set"), c = store.choice();
+  let cur;
+  if(url){ cur = url + ".json"; if(!SETS.some(s=>s.file===cur)) SETS.push({file:cur, name:url}); }
+  else cur = c && SETS.some(s=>s.file===c) ? c : store.get() ? "" : SETS[0]?.file;
+  fillSets(cur ?? ""); openSet(cur);
+});
+$("reset").onclick = () => { try{["q","qname","set"].forEach(k=>localStorage.removeItem(k))}catch(e){} location.reload(); };
 </script>
 
 </body>

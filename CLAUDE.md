@@ -1,21 +1,22 @@
 # type-english
 
-Quiz tłumaczenia PL → EN, styl terminala. Cała apka to jeden plik `index.html` (inline CSS + JS, bez frameworków i bez builda) + `questions.json`.
+Quiz tłumaczenia PL → EN / DE, styl terminala. Cała apka to jeden plik `index.html` (inline CSS + JS, bez frameworków i bez builda) + zestawy w `sets/`.
 
 ## Pliki
 - `index.html` — UI i logika. Zawiera też `SAMPLE` (zapasowy zestaw, gdy nic innego się nie wczyta).
-- `questions.json` — domyślny zestaw pytań.
-- `.github/workflows/pages.yml` — deploy na GitHub Pages przy każdym pushu na `main` (kopiuje `index.html` i `*.json` do `_site`).
+- `sets/index.json` — spis zestawów do listy wyboru (`[{file, name}]`); `sets/*.json` — zestawy pytań.
+- `.github/workflows/pages.yml` — deploy na GitHub Pages przy każdym pushu na `main` (kopiuje `index.html` i `sets/` do `_site`).
 
 ## Format pytań
-`{ "group1": { "count", "points", "questions": [...] }, "group2": {...} }`, element: `{ "pl": "...", "en": "..." | ["...", "..."] }`. Grupa może być też samą tablicą (stary format) — wtedy `DEFAULTS`. `validate()` normalizuje do formy obiektowej. Pełny opis formatu w README.
+`{ "lang": "en"|"de", "group1": { "count", "points", "questions": [...] }, "group2": {...} }` (`lang` domyślnie `en`, `group2` opcjonalna), element: `{ "pl": "...", "<lang>": "..." | ["...", "..."] }`. Języki w `LANGS` (teksty UI + przyciski znaków). Grupa może być też samą tablicą (stary format) — wtedy `DEFAULTS`. `validate()` normalizuje do formy obiektowej. Pełny opis formatu w README.
 
 ## Logika
 - Runda: `count` pytań z każdej grupy, każde warte `points` grupy (domyślnie `DEFAULTS`: 10 × 1 + 1 × 2). Mnożnik wg złych prób w `SCALE` (1 / 0.5 / 0.25 / 0 od 3 złych), podpowiedź (przycisk albo Tab) ucina wpis na pierwszym błędzie i dopisuje 3 kolejne znaki, najdalej do 2/3 odpowiedzi; każda mnoży punkty × 0.5 (`HINT_*`), „pokaż odpowiedź” = 0 (przy włączonym `#fillOn`, localStorage `fill`, domyślnie włączony, wpisuje odpowiedź w pole). Maks. = suma `points` wylosowanych pytań.
 - Timer: `T_LIMIT = 20` s na pytanie, po czasie mnożnik `T_MULT = 0.5` (mnożony z `SCALE`). Pierwsze pytanie rundy czeka na pierwszą literę (`waitStart`), kolejne liczą od `show()`. Przełącznik `#timerOn`, stan w localStorage `timer` (domyślnie włączony).
 - `variants()` rozwija nawiasy w `en` na warianty (z tekstem i bez; pierwszy = pełny, używany w podpowiedzi). `accepted()` = unikalne warianty po `norm()`.
-- Odpowiedzi normalizowane w `norm()` (małe litery, apostrofy, końcowa interpunkcja, spacje).
-- Kolejność źródeł pytań: `?set=nazwa` (`nazwa.json`) > zestaw w localStorage (`q`, nazwa w `qname`) > `questions.json` > `SAMPLE`.
+- Odpowiedzi normalizowane w `norm()` (małe litery — chyba że język ma `cs: true`, jak `de` — apostrofy, końcowa interpunkcja, spacje).
+- Porównanie wpisu z odpowiedzią przez `match()` — `ALT` pozwala wpisać `ä ö ü ß` jako `ae oe ue ss`.
+- Kolejność źródeł pytań: `?set=nazwa` (`sets/nazwa.json`) > wybór z listy w localStorage `set` (plik albo `""` = własny) > własny zestaw (`q`, nazwa w `qname`) > pierwszy ze spisu > `SAMPLE`.
 - Log terminala: każde pytanie ma swoją grupę `.qgrp`; po zaliczeniu dostaje `.done` (przygaszenie).
 - Historia wyników tylko w pamięci (`history`), od otwarcia strony — celowo nie w localStorage.
 
@@ -37,4 +38,4 @@ Każdą zmianę funkcjonalności sprawdzaj w headless Chromium (z Playwrighta: `
 - Globalne `let`/funkcje z `index.html` są widoczne w `t.js`: ustaw `round`/`i`, wywołaj `show()`, `hint()`, `check({preventDefault(){}})`, `$("skip").click()` itd. Odczekaj start (`setTimeout` ~500 ms), a po poprawnej odpowiedzi 700 ms do następnego pytania.
 - Wyniki zapisz do `document.body` i odczytaj z DOM:
   `chrome --headless --no-sandbox --virtual-time-budget=4000 --dump-dom file:///…/i.html`
-- Z `file://` nie wczyta się `questions.json` — startuje `SAMPLE`, co do testów wystarcza.
+- Z `file://` nie wczyta się `sets/` — startuje `SAMPLE`. Do testów zestawów i listy wyboru trzeba serwera HTTP. Świeży profil Chromium (`--user-data-dir`) najpierw rozgrzej jednym uruchomieniem na `about:blank`, inaczej pierwszy `--dump-dom` zwraca pustkę.

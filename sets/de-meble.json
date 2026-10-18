@@ -1,0 +1,29 @@
+{
+  "lang": "de",
+  "group1": {
+    "count": 10,
+    "points": 1,
+    "questions": [
+      {"pl": "lampa", "de": "die Lampe"},
+      {"pl": "lampa stojąca", "de": "die Stehlampe"},
+      {"pl": "krzesło", "de": "der Stuhl"},
+      {"pl": "stół", "de": "der Tisch"},
+      {"pl": "kanapa", "de": "das Sofa"},
+      {"pl": "łóżko", "de": "das Bett"},
+      {"pl": "fotel", "de": "der Sessel"},
+      {"pl": "telewizor", "de": "der Fernseher"},
+      {"pl": "kuchenka elektryczna", "de": "der Elektroherd"},
+      {"pl": "biurko", "de": "der Schreibtisch"},
+      {"pl": "dywan", "de": "der Teppich"},
+      {"pl": "komputer", "de": "der Computer"},
+      {"pl": "stolik nocny", "de": "der Nachttisch"},
+      {"pl": "szafa", "de": "der Schrank"},
+      {"pl": "szafa na ubrania", "de": "der Kleiderschrank"},
+      {"pl": "komoda", "de": "die Kommode"},
+      {"pl": "lodówka", "de": "der Kühlschrank"},
+      {"pl": "obraz", "de": "das Bild"},
+      {"pl": "szuflada", "de": "die Schublade"},
+      {"pl": "lustro", "de": "der Spiegel"}
+    ]
+  }
+}
