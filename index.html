@@ -71,6 +71,9 @@ textarea{width:100%;min-height:220px;background:var(--panel);color:var(--fg);bor
 .switch input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.switch input::after{transition:left .15s}}
 .msg{font-size:12.5px}
+.pick{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:13px;min-width:0}
+select{font:inherit;font-size:13px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:6px 10px;min-width:0;max-width:100%;cursor:pointer}
+select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
 .qgrp{display:flex;flex-direction:column;gap:3px}
 .qgrp.done{opacity:.38}
@@ -90,6 +93,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
 
 
 <div class="wrap">
+  <label class="pick" id="pick" hidden>zestaw <select id="set"></select></label>
   <div class="tabs" id="tabs"></div>
   <h1><span id="q">…</span></h1>
   <div class="sub" id="sub"></div>
@@ -128,7 +132,7 @@ input[type=file]{font:inherit;font-size:12px;color:var(--dim);max-width:100%}
     <div class="row">
       <button type="button" class="go" id="load">wczytaj</button>
       <input type="file" id="file" accept=".json,application/json" aria-label="Plik JSON">
-      <button type="button" id="reset">wróć do questions.json</button>
+      <button type="button" id="reset" hidden>usuń własny zestaw</button>
       <span class="msg" id="jmsg"></span>
     </div>
   </details>
@@ -155,7 +159,10 @@ const $ = id => document.getElementById(id);
 const store = {
   get(){ try{return localStorage.getItem("q")}catch(e){return null} },
   name(){ try{return localStorage.getItem("qname") || "własny zestaw"}catch(e){return "własny zestaw"} },
-  set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} }
+  set(v, name){ try{localStorage.setItem("q",v); localStorage.setItem("qname",name)}catch(e){} },
+  // wybrany zestaw: plik z sets/ albo "" = własny
+  choice(){ try{return localStorage.getItem("set")}catch(e){return null} },
+  choose(v){ try{localStorage.setItem("set",v)}catch(e){} }
 };
 
 // mnożnik punktów wg liczby złych prób przed poprawną: 0 → 100%, 1 → 50%, 2 → 25%, 3+ → 0
@@ -341,7 +348,7 @@ function loadJSON(text, quiet, save=true, label="własny zestaw"){
   try{
     data = validate(JSON.parse(text)); setLabel = label;
     $("json").value = JSON.stringify(data, null, 2);
-    if(save) store.set($("json").value, label);
+    if(save){ store.set($("json").value, label); store.choose(""); fillSets(""); }
     if(!quiet) $("jmsg").innerHTML = `<span class="ok">wczytano ${esc(label)}: losowane ${Math.min(data.group1.count,data.group1.questions.length)} z ${data.group1.questions.length} + ${Math.min(data.group2.count,data.group2.questions.length)} z ${data.group2.questions.length} pytań</span>`;
     newRound(); return true;
   }catch(err){
@@ -352,13 +359,32 @@ function loadJSON(text, quiet, save=true, label="własny zestaw"){
 $("load").onclick = () => loadJSON($("json").value);
 $("file").onchange = e => { const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>loadJSON(fr.result, false, true, f.name); fr.readAsText(f); };
 
-// Kolejność: ?set=nazwa (nazwa.json) > zestaw wklejony/wgrany na tym urządzeniu > questions.json > przykład
-const setName = new URLSearchParams(location.search).get("set");
-const fromRepo = f => fetch(f, {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.text(); }).then(t => { if(!loadJSON(t, true, false, f)) throw 0; });
+// zestawy z sets/index.json; kolejność: ?set=nazwa (sets/nazwa.json) > zapamiętany wybór > własny zestaw > pierwszy ze spisu > przykład
+let SETS = [];
 const fallback = () => loadJSON(JSON.stringify(SAMPLE), true, false, "przykład");
-if(setName) fromRepo(encodeURIComponent(setName) + ".json").catch(fallback);
-else { const s = store.get(); if(!(s && loadJSON(s, true, true, store.name()))) fromRepo("questions.json").catch(fallback); }
-$("reset").onclick = () => { try{localStorage.removeItem("q"); localStorage.removeItem("qname")}catch(e){} location.reload(); };
+const fromRepo = f => fetch("sets/" + encodeURIComponent(f), {cache:"no-store"})
+  .then(r => { if(!r.ok) throw 0; return r.text(); })
+  .then(t => { if(!loadJSON(t, true, false, SETS.find(s=>s.file===f)?.name || f)) throw 0; });
+function fillSets(cur){
+  $("set").innerHTML = SETS.map(s=>`<option value="${esc(s.file)}">${esc(s.name)}</option>`).join("")
+    + (store.get() ? `<option value="">${store.name()==="własny zestaw" ? "własny zestaw" : "własny: "+esc(store.name())}</option>` : "");
+  $("set").value = cur; $("pick").hidden = !$("set").options.length; $("reset").hidden = !store.get();
+}
+function openSet(v){
+  if(v === "") loadJSON(store.get(), true, false, store.name()) || fallback();
+  else if(v) fromRepo(v).catch(fallback);
+  else fallback();
+}
+$("set").onchange = () => { const v = $("set").value; store.choose(v); window.history.replaceState(null, "", location.pathname); openSet(v); };
+fetch("sets/index.json", {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.json(); }).catch(() => []).then(list => {
+  SETS = Array.isArray(list) ? list.filter(s => s && s.file).map(s => ({file: String(s.file), name: String(s.name || s.file)})) : [];
+  const url = new URLSearchParams(location.search).get("set"), c = store.choice();
+  let cur;
+  if(url){ cur = url + ".json"; if(!SETS.some(s=>s.file===cur)) SETS.push({file:cur, name:url}); }
+  else cur = c && SETS.some(s=>s.file===c) ? c : store.get() ? "" : SETS[0]?.file;
+  fillSets(cur ?? ""); openSet(cur);
+});
+$("reset").onclick = () => { try{["q","qname","set"].forEach(k=>localStorage.removeItem(k))}catch(e){} location.reload(); };
 </script>
 
 </body>
